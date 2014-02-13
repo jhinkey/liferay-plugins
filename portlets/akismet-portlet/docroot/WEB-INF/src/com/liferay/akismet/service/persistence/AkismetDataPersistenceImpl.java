@@ -30,7 +30,6 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.CalendarUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -41,12 +40,13 @@ import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnmodifiableList;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.CacheModel;
 import com.liferay.portal.model.ModelListener;
 import com.liferay.portal.service.persistence.impl.BasePersistenceImpl;
 
 import java.io.Serializable;
+
+import java.sql.Timestamp;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -165,8 +165,8 @@ public class AkismetDataPersistenceImpl extends BasePersistenceImpl<AkismetData>
 
 		if ((list != null) && !list.isEmpty()) {
 			for (AkismetData akismetData : list) {
-				if (!Validator.equals(modifiedDate,
-							akismetData.getModifiedDate())) {
+				if ((modifiedDate.getTime() <= akismetData.getModifiedDate()
+															  .getTime())) {
 					list = null;
 
 					break;
@@ -219,7 +219,7 @@ public class AkismetDataPersistenceImpl extends BasePersistenceImpl<AkismetData>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				if (bindModifiedDate) {
-					qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+					qPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
 				if (!pagination) {
@@ -349,6 +349,10 @@ public class AkismetDataPersistenceImpl extends BasePersistenceImpl<AkismetData>
 	public AkismetData fetchByLtModifiedDate_Last(Date modifiedDate,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByLtModifiedDate(modifiedDate);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<AkismetData> list = findByLtModifiedDate(modifiedDate, count - 1,
 				count, orderByComparator);
@@ -496,7 +500,7 @@ public class AkismetDataPersistenceImpl extends BasePersistenceImpl<AkismetData>
 		QueryPos qPos = QueryPos.getInstance(q);
 
 		if (bindModifiedDate) {
-			qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+			qPos.add(new Timestamp(modifiedDate.getTime()));
 		}
 
 		if (orderByComparator != null) {
@@ -577,7 +581,7 @@ public class AkismetDataPersistenceImpl extends BasePersistenceImpl<AkismetData>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				if (bindModifiedDate) {
-					qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+					qPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
 				count = (Long)q.uniqueResult();
@@ -839,6 +843,10 @@ public class AkismetDataPersistenceImpl extends BasePersistenceImpl<AkismetData>
 	private static final String _FINDER_COLUMN_C_C_CLASSNAMEID_2 = "akismetData.classNameId = ? AND ";
 	private static final String _FINDER_COLUMN_C_C_CLASSPK_2 = "akismetData.classPK = ?";
 
+	public AkismetDataPersistenceImpl() {
+		setModelClass(AkismetData.class);
+	}
+
 	/**
 	 * Caches the akismet data in the entity cache if it is enabled.
 	 *
@@ -888,7 +896,7 @@ public class AkismetDataPersistenceImpl extends BasePersistenceImpl<AkismetData>
 			CacheRegistryUtil.clear(AkismetDataImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(AkismetDataImpl.class.getName());
+		EntityCacheUtil.clearCache(AkismetDataImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1116,10 +1124,13 @@ public class AkismetDataPersistenceImpl extends BasePersistenceImpl<AkismetData>
 		}
 
 		EntityCacheUtil.putResult(AkismetDataModelImpl.ENTITY_CACHE_ENABLED,
-			AkismetDataImpl.class, akismetData.getPrimaryKey(), akismetData);
+			AkismetDataImpl.class, akismetData.getPrimaryKey(), akismetData,
+			false);
 
 		clearUniqueFindersCache(akismetData);
 		cacheUniqueFindersCache(akismetData);
+
+		akismetData.resetOriginalValues();
 
 		return akismetData;
 	}

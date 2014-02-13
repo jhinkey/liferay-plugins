@@ -81,6 +81,10 @@ public class DefinitionPersistenceImpl extends BasePersistenceImpl<Definition>
 			DefinitionModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
 
+	public DefinitionPersistenceImpl() {
+		setModelClass(Definition.class);
+	}
+
 	/**
 	 * Caches the definition in the entity cache if it is enabled.
 	 *
@@ -126,7 +130,7 @@ public class DefinitionPersistenceImpl extends BasePersistenceImpl<Definition>
 			CacheRegistryUtil.clear(DefinitionImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(DefinitionImpl.class.getName());
+		EntityCacheUtil.clearCache(DefinitionImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -299,7 +303,9 @@ public class DefinitionPersistenceImpl extends BasePersistenceImpl<Definition>
 		}
 
 		EntityCacheUtil.putResult(DefinitionModelImpl.ENTITY_CACHE_ENABLED,
-			DefinitionImpl.class, definition.getPrimaryKey(), definition);
+			DefinitionImpl.class, definition.getPrimaryKey(), definition, false);
+
+		definition.resetOriginalValues();
 
 		return definition;
 	}

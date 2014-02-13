@@ -364,6 +364,10 @@ public class JIRAActionPersistenceImpl extends BasePersistenceImpl<JIRAAction>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByJiraUserId(jiraUserId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<JIRAAction> list = findByJiraUserId(jiraUserId, count - 1, count,
 				orderByComparator);
 
@@ -883,6 +887,10 @@ public class JIRAActionPersistenceImpl extends BasePersistenceImpl<JIRAAction>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByJiraIssueId(jiraIssueId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<JIRAAction> list = findByJiraIssueId(jiraIssueId, count - 1,
 				count, orderByComparator);
 
@@ -1379,6 +1387,10 @@ public class JIRAActionPersistenceImpl extends BasePersistenceImpl<JIRAAction>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByType(type);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<JIRAAction> list = findByType(type, count - 1, count,
 				orderByComparator);
 
@@ -1634,6 +1646,10 @@ public class JIRAActionPersistenceImpl extends BasePersistenceImpl<JIRAAction>
 	private static final String _FINDER_COLUMN_TYPE_TYPE_2 = "jiraAction.type = ?";
 	private static final String _FINDER_COLUMN_TYPE_TYPE_3 = "(jiraAction.type IS NULL OR jiraAction.type = '')";
 
+	public JIRAActionPersistenceImpl() {
+		setModelClass(JIRAAction.class);
+	}
+
 	/**
 	 * Caches the j i r a action in the entity cache if it is enabled.
 	 *
@@ -1679,7 +1695,7 @@ public class JIRAActionPersistenceImpl extends BasePersistenceImpl<JIRAAction>
 			CacheRegistryUtil.clear(JIRAActionImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(JIRAActionImpl.class.getName());
+		EntityCacheUtil.clearCache(JIRAActionImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1912,7 +1928,9 @@ public class JIRAActionPersistenceImpl extends BasePersistenceImpl<JIRAAction>
 		}
 
 		EntityCacheUtil.putResult(JIRAActionModelImpl.ENTITY_CACHE_ENABLED,
-			JIRAActionImpl.class, jiraAction.getPrimaryKey(), jiraAction);
+			JIRAActionImpl.class, jiraAction.getPrimaryKey(), jiraAction, false);
+
+		jiraAction.resetOriginalValues();
 
 		return jiraAction;
 	}

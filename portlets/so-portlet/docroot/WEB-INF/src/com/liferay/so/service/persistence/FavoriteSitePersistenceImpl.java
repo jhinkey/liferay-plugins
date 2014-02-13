@@ -342,6 +342,10 @@ public class FavoriteSitePersistenceImpl extends BasePersistenceImpl<FavoriteSit
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUserId(userId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<FavoriteSite> list = findByUserId(userId, count - 1, count,
 				orderByComparator);
 
@@ -798,6 +802,10 @@ public class FavoriteSitePersistenceImpl extends BasePersistenceImpl<FavoriteSit
 	private static final String _FINDER_COLUMN_G_U_GROUPID_2 = "favoriteSite.groupId = ? AND ";
 	private static final String _FINDER_COLUMN_G_U_USERID_2 = "favoriteSite.userId = ?";
 
+	public FavoriteSitePersistenceImpl() {
+		setModelClass(FavoriteSite.class);
+	}
+
 	/**
 	 * Caches the favorite site in the entity cache if it is enabled.
 	 *
@@ -847,7 +855,7 @@ public class FavoriteSitePersistenceImpl extends BasePersistenceImpl<FavoriteSit
 			CacheRegistryUtil.clear(FavoriteSiteImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(FavoriteSiteImpl.class.getName());
+		EntityCacheUtil.clearCache(FavoriteSiteImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1096,10 +1104,13 @@ public class FavoriteSitePersistenceImpl extends BasePersistenceImpl<FavoriteSit
 		}
 
 		EntityCacheUtil.putResult(FavoriteSiteModelImpl.ENTITY_CACHE_ENABLED,
-			FavoriteSiteImpl.class, favoriteSite.getPrimaryKey(), favoriteSite);
+			FavoriteSiteImpl.class, favoriteSite.getPrimaryKey(), favoriteSite,
+			false);
 
 		clearUniqueFindersCache(favoriteSite);
 		cacheUniqueFindersCache(favoriteSite);
+
+		favoriteSite.resetOriginalValues();
 
 		return favoriteSite;
 	}

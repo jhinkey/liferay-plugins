@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.CalendarUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -47,6 +46,8 @@ import com.liferay.socialcoding.model.impl.JIRAIssueImpl;
 import com.liferay.socialcoding.model.impl.JIRAIssueModelImpl;
 
 import java.io.Serializable;
+
+import java.sql.Timestamp;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -350,6 +351,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 	public JIRAIssue fetchByProjectId_Last(long projectId,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByProjectId(projectId);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<JIRAIssue> list = findByProjectId(projectId, count - 1, count,
 				orderByComparator);
@@ -1110,6 +1115,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByReporterJiraUserId(reporterJiraUserId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<JIRAIssue> list = findByReporterJiraUserId(reporterJiraUserId,
 				count - 1, count, orderByComparator);
 
@@ -1656,6 +1665,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByAssigneeJiraUserId(assigneeJiraUserId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<JIRAIssue> list = findByAssigneeJiraUserId(assigneeJiraUserId,
 				count - 1, count, orderByComparator);
 
@@ -1999,7 +2012,8 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 
 		if ((list != null) && !list.isEmpty()) {
 			for (JIRAIssue jiraIssue : list) {
-				if (!Validator.equals(modifiedDate, jiraIssue.getModifiedDate()) ||
+				if ((modifiedDate.getTime() >= jiraIssue.getModifiedDate()
+															.getTime()) ||
 						(projectId != jiraIssue.getProjectId())) {
 					list = null;
 
@@ -2055,7 +2069,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				if (bindModifiedDate) {
-					qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+					qPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
 				qPos.add(projectId);
@@ -2197,6 +2211,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 	public JIRAIssue fetchByMD_P_Last(Date modifiedDate, long projectId,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByMD_P(modifiedDate, projectId);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<JIRAIssue> list = findByMD_P(modifiedDate, projectId, count - 1,
 				count, orderByComparator);
@@ -2347,7 +2365,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		QueryPos qPos = QueryPos.getInstance(q);
 
 		if (bindModifiedDate) {
-			qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+			qPos.add(new Timestamp(modifiedDate.getTime()));
 		}
 
 		qPos.add(projectId);
@@ -2434,7 +2452,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				if (bindModifiedDate) {
-					qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+					qPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
 				qPos.add(projectId);
@@ -2764,6 +2782,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		String reporterJiraUserId, OrderByComparator orderByComparator)
 		throws SystemException {
 		int count = countByP_RJUI(projectId, reporterJiraUserId);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<JIRAIssue> list = findByP_RJUI(projectId, reporterJiraUserId,
 				count - 1, count, orderByComparator);
@@ -3340,6 +3362,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		throws SystemException {
 		int count = countByP_AJUI(projectId, assigneeJiraUserId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<JIRAIssue> list = findByP_AJUI(projectId, assigneeJiraUserId,
 				count - 1, count, orderByComparator);
 
@@ -3704,7 +3730,8 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 
 		if ((list != null) && !list.isEmpty()) {
 			for (JIRAIssue jiraIssue : list) {
-				if (!Validator.equals(modifiedDate, jiraIssue.getModifiedDate()) ||
+				if ((modifiedDate.getTime() >= jiraIssue.getModifiedDate()
+															.getTime()) ||
 						(projectId != jiraIssue.getProjectId()) ||
 						!Validator.equals(reporterJiraUserId,
 							jiraIssue.getReporterJiraUserId())) {
@@ -3776,7 +3803,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				if (bindModifiedDate) {
-					qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+					qPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
 				qPos.add(projectId);
@@ -3934,6 +3961,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		String reporterJiraUserId, OrderByComparator orderByComparator)
 		throws SystemException {
 		int count = countByMD_P_RJUI(modifiedDate, projectId, reporterJiraUserId);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<JIRAIssue> list = findByMD_P_RJUI(modifiedDate, projectId,
 				reporterJiraUserId, count - 1, count, orderByComparator);
@@ -4103,7 +4134,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		QueryPos qPos = QueryPos.getInstance(q);
 
 		if (bindModifiedDate) {
-			qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+			qPos.add(new Timestamp(modifiedDate.getTime()));
 		}
 
 		qPos.add(projectId);
@@ -4212,7 +4243,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				if (bindModifiedDate) {
-					qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+					qPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
 				qPos.add(projectId);
@@ -4339,7 +4370,8 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 
 		if ((list != null) && !list.isEmpty()) {
 			for (JIRAIssue jiraIssue : list) {
-				if (!Validator.equals(modifiedDate, jiraIssue.getModifiedDate()) ||
+				if ((modifiedDate.getTime() >= jiraIssue.getModifiedDate()
+															.getTime()) ||
 						(projectId != jiraIssue.getProjectId()) ||
 						!Validator.equals(assigneeJiraUserId,
 							jiraIssue.getAssigneeJiraUserId())) {
@@ -4411,7 +4443,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				if (bindModifiedDate) {
-					qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+					qPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
 				qPos.add(projectId);
@@ -4569,6 +4601,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		String assigneeJiraUserId, OrderByComparator orderByComparator)
 		throws SystemException {
 		int count = countByMD_P_AJUI(modifiedDate, projectId, assigneeJiraUserId);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<JIRAIssue> list = findByMD_P_AJUI(modifiedDate, projectId,
 				assigneeJiraUserId, count - 1, count, orderByComparator);
@@ -4738,7 +4774,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		QueryPos qPos = QueryPos.getInstance(q);
 
 		if (bindModifiedDate) {
-			qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+			qPos.add(new Timestamp(modifiedDate.getTime()));
 		}
 
 		qPos.add(projectId);
@@ -4847,7 +4883,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				if (bindModifiedDate) {
-					qPos.add(CalendarUtil.getTimestamp(modifiedDate));
+					qPos.add(new Timestamp(modifiedDate.getTime()));
 				}
 
 				qPos.add(projectId);
@@ -5227,6 +5263,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		String reporterJiraUserId, String status,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByP_RJUI_S(projectId, reporterJiraUserId, status);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<JIRAIssue> list = findByP_RJUI_S(projectId, reporterJiraUserId,
 				status, count - 1, count, orderByComparator);
@@ -5889,6 +5929,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByP_AJUI_S(projectId, assigneeJiraUserId, status);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<JIRAIssue> list = findByP_AJUI_S(projectId, assigneeJiraUserId,
 				status, count - 1, count, orderByComparator);
 
@@ -6202,6 +6246,10 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 	private static final String _FINDER_COLUMN_P_AJUI_S_STATUS_2 = "jiraIssue.status = ?";
 	private static final String _FINDER_COLUMN_P_AJUI_S_STATUS_3 = "(jiraIssue.status IS NULL OR jiraIssue.status = '')";
 
+	public JIRAIssuePersistenceImpl() {
+		setModelClass(JIRAIssue.class);
+	}
+
 	/**
 	 * Caches the j i r a issue in the entity cache if it is enabled.
 	 *
@@ -6250,7 +6298,7 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 			CacheRegistryUtil.clear(JIRAIssueImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(JIRAIssueImpl.class.getName());
+		EntityCacheUtil.clearCache(JIRAIssueImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -6617,10 +6665,12 @@ public class JIRAIssuePersistenceImpl extends BasePersistenceImpl<JIRAIssue>
 		}
 
 		EntityCacheUtil.putResult(JIRAIssueModelImpl.ENTITY_CACHE_ENABLED,
-			JIRAIssueImpl.class, jiraIssue.getPrimaryKey(), jiraIssue);
+			JIRAIssueImpl.class, jiraIssue.getPrimaryKey(), jiraIssue, false);
 
 		clearUniqueFindersCache(jiraIssue);
 		cacheUniqueFindersCache(jiraIssue);
+
+		jiraIssue.resetOriginalValues();
 
 		return jiraIssue;
 	}

@@ -61,7 +61,7 @@ public class CheckoutUtil {
 	/**
 	 * @see com.liferay.portal.service.persistence.BasePersistence#countWithDynamicQuery(DynamicQuery)
 	 */
-	public long countWithDynamicQuery(DynamicQuery dynamicQuery)
+	public static long countWithDynamicQuery(DynamicQuery dynamicQuery)
 		throws SystemException {
 		return getPersistence().countWithDynamicQuery(dynamicQuery);
 	}
@@ -271,6 +271,7 @@ public class CheckoutUtil {
 	/**
 	 * @deprecated As of 6.2.0
 	 */
+	@Deprecated
 	public void setPersistence(CheckoutPersistence persistence) {
 	}
 

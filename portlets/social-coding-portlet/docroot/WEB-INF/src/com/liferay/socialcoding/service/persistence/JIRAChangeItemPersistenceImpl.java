@@ -359,6 +359,10 @@ public class JIRAChangeItemPersistenceImpl extends BasePersistenceImpl<JIRAChang
 		throws SystemException {
 		int count = countByJiraChangeGroupId(jiraChangeGroupId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<JIRAChangeItem> list = findByJiraChangeGroupId(jiraChangeGroupId,
 				count - 1, count, orderByComparator);
 
@@ -588,6 +592,10 @@ public class JIRAChangeItemPersistenceImpl extends BasePersistenceImpl<JIRAChang
 	private static final String _FINDER_COLUMN_JIRACHANGEGROUPID_JIRACHANGEGROUPID_2 =
 		"jiraChangeItem.jiraChangeGroupId = ?";
 
+	public JIRAChangeItemPersistenceImpl() {
+		setModelClass(JIRAChangeItem.class);
+	}
+
 	/**
 	 * Caches the j i r a change item in the entity cache if it is enabled.
 	 *
@@ -634,7 +642,7 @@ public class JIRAChangeItemPersistenceImpl extends BasePersistenceImpl<JIRAChang
 			CacheRegistryUtil.clear(JIRAChangeItemImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(JIRAChangeItemImpl.class.getName());
+		EntityCacheUtil.clearCache(JIRAChangeItemImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -834,7 +842,9 @@ public class JIRAChangeItemPersistenceImpl extends BasePersistenceImpl<JIRAChang
 
 		EntityCacheUtil.putResult(JIRAChangeItemModelImpl.ENTITY_CACHE_ENABLED,
 			JIRAChangeItemImpl.class, jiraChangeItem.getPrimaryKey(),
-			jiraChangeItem);
+			jiraChangeItem, false);
+
+		jiraChangeItem.resetOriginalValues();
 
 		return jiraChangeItem;
 	}

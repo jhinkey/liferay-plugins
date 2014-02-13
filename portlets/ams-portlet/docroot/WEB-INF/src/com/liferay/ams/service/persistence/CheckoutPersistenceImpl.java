@@ -81,6 +81,10 @@ public class CheckoutPersistenceImpl extends BasePersistenceImpl<Checkout>
 			CheckoutModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
 
+	public CheckoutPersistenceImpl() {
+		setModelClass(Checkout.class);
+	}
+
 	/**
 	 * Caches the checkout in the entity cache if it is enabled.
 	 *
@@ -126,7 +130,7 @@ public class CheckoutPersistenceImpl extends BasePersistenceImpl<Checkout>
 			CacheRegistryUtil.clear(CheckoutImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(CheckoutImpl.class.getName());
+		EntityCacheUtil.clearCache(CheckoutImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -298,7 +302,9 @@ public class CheckoutPersistenceImpl extends BasePersistenceImpl<Checkout>
 		}
 
 		EntityCacheUtil.putResult(CheckoutModelImpl.ENTITY_CACHE_ENABLED,
-			CheckoutImpl.class, checkout.getPrimaryKey(), checkout);
+			CheckoutImpl.class, checkout.getPrimaryKey(), checkout, false);
+
+		checkout.resetOriginalValues();
 
 		return checkout;
 	}

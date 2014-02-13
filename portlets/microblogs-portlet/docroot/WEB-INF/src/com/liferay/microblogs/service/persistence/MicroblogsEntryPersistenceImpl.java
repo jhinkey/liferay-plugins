@@ -622,7 +622,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, MicroblogsEntryImpl.class);
@@ -799,7 +799,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 				MicroblogsEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -928,7 +928,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -1480,7 +1480,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, MicroblogsEntryImpl.class);
@@ -1656,7 +1656,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 				MicroblogsEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -1785,7 +1785,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -2371,7 +2371,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, MicroblogsEntryImpl.class);
@@ -2553,7 +2553,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 				MicroblogsEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -2694,7 +2694,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -3285,7 +3285,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, MicroblogsEntryImpl.class);
@@ -3467,7 +3467,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 				MicroblogsEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -3610,7 +3610,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -4210,7 +4210,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, MicroblogsEntryImpl.class);
@@ -4393,7 +4393,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 				MicroblogsEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -4537,7 +4537,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -4616,7 +4616,7 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 			CacheRegistryUtil.clear(MicroblogsEntryImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(MicroblogsEntryImpl.class.getName());
+		EntityCacheUtil.clearCache(MicroblogsEntryImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -4894,7 +4894,9 @@ public class MicroblogsEntryPersistenceImpl extends BasePersistenceImpl<Microblo
 
 		EntityCacheUtil.putResult(MicroblogsEntryModelImpl.ENTITY_CACHE_ENABLED,
 			MicroblogsEntryImpl.class, microblogsEntry.getPrimaryKey(),
-			microblogsEntry);
+			microblogsEntry, false);
+
+		microblogsEntry.resetOriginalValues();
 
 		return microblogsEntry;
 	}

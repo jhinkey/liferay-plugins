@@ -349,6 +349,10 @@ public class ProjectsEntryPersistenceImpl extends BasePersistenceImpl<ProjectsEn
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUserId(userId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<ProjectsEntry> list = findByUserId(userId, count - 1, count,
 				orderByComparator);
 
@@ -574,6 +578,10 @@ public class ProjectsEntryPersistenceImpl extends BasePersistenceImpl<ProjectsEn
 
 	private static final String _FINDER_COLUMN_USERID_USERID_2 = "projectsEntry.userId = ?";
 
+	public ProjectsEntryPersistenceImpl() {
+		setModelClass(ProjectsEntry.class);
+	}
+
 	/**
 	 * Caches the projects entry in the entity cache if it is enabled.
 	 *
@@ -620,7 +628,7 @@ public class ProjectsEntryPersistenceImpl extends BasePersistenceImpl<ProjectsEn
 			CacheRegistryUtil.clear(ProjectsEntryImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(ProjectsEntryImpl.class.getName());
+		EntityCacheUtil.clearCache(ProjectsEntryImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -816,7 +824,9 @@ public class ProjectsEntryPersistenceImpl extends BasePersistenceImpl<ProjectsEn
 
 		EntityCacheUtil.putResult(ProjectsEntryModelImpl.ENTITY_CACHE_ENABLED,
 			ProjectsEntryImpl.class, projectsEntry.getPrimaryKey(),
-			projectsEntry);
+			projectsEntry, false);
+
+		projectsEntry.resetOriginalValues();
 
 		return projectsEntry;
 	}

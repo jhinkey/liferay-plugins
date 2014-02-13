@@ -348,6 +348,10 @@ public class AttachmentPersistenceImpl extends BasePersistenceImpl<Attachment>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByMessageId(messageId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Attachment> list = findByMessageId(messageId, count - 1, count,
 				orderByComparator);
 
@@ -573,6 +577,10 @@ public class AttachmentPersistenceImpl extends BasePersistenceImpl<Attachment>
 
 	private static final String _FINDER_COLUMN_MESSAGEID_MESSAGEID_2 = "attachment.messageId = ?";
 
+	public AttachmentPersistenceImpl() {
+		setModelClass(Attachment.class);
+	}
+
 	/**
 	 * Caches the attachment in the entity cache if it is enabled.
 	 *
@@ -618,7 +626,7 @@ public class AttachmentPersistenceImpl extends BasePersistenceImpl<Attachment>
 			CacheRegistryUtil.clear(AttachmentImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(AttachmentImpl.class.getName());
+		EntityCacheUtil.clearCache(AttachmentImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -814,7 +822,9 @@ public class AttachmentPersistenceImpl extends BasePersistenceImpl<Attachment>
 		}
 
 		EntityCacheUtil.putResult(AttachmentModelImpl.ENTITY_CACHE_ENABLED,
-			AttachmentImpl.class, attachment.getPrimaryKey(), attachment);
+			AttachmentImpl.class, attachment.getPrimaryKey(), attachment, false);
+
+		attachment.resetOriginalValues();
 
 		return attachment;
 	}

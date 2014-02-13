@@ -57,17 +57,27 @@ public class ScriptingContextBuilderImpl implements ScriptingContextBuilder {
 		Map<String, Object> inputObjects = new HashMap<String, Object>(
 			workflowContext);
 
+		inputObjects.put(
+			"kaleoInstanceToken", executionContext.getKaleoInstanceToken());
 		inputObjects.put("workflowContext", workflowContext);
 
 		KaleoTaskInstanceToken kaleoTaskInstanceToken =
 			executionContext.getKaleoTaskInstanceToken();
 
 		if (kaleoTaskInstanceToken != null) {
+			inputObjects.put("kaleoTaskInstanceToken", kaleoTaskInstanceToken);
+
 			KaleoTask kaleoTask = kaleoTaskInstanceToken.getKaleoTask();
 
 			inputObjects.put("taskName", kaleoTask.getName());
 
-			inputObjects.put("userId", kaleoTaskInstanceToken.getUserId());
+			if (kaleoTaskInstanceToken.getCompletionUserId() != 0) {
+				inputObjects.put(
+					"userId", kaleoTaskInstanceToken.getCompletionUserId());
+			}
+			else {
+				inputObjects.put("userId", kaleoTaskInstanceToken.getUserId());
+			}
 
 			List<WorkflowTaskAssignee> workflowTaskAssignees =
 				KaleoTaskAssignmentInstanceUtil.getWorkflowTaskAssignees(
@@ -80,6 +90,12 @@ public class ScriptingContextBuilderImpl implements ScriptingContextBuilder {
 				executionContext.getKaleoInstanceToken();
 
 			inputObjects.put("userId", kaleoInstanceToken.getUserId());
+		}
+
+		if (executionContext.getKaleoTimerInstanceToken() != null) {
+			inputObjects.put(
+				"kaleoTimerInstanceToken",
+				executionContext.getKaleoTimerInstanceToken());
 		}
 
 		return inputObjects;

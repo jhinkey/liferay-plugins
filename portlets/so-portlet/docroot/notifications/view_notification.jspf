@@ -42,7 +42,7 @@ else {
 }
 %>
 
-<div class="aui-menu-item user-notification-event-content" data-portletUrl="<%= portletURL %>">
+<div class="menu-item user-notification-event-content" data-portletUrl="<%= portletURL %>">
 	<div class="user-notification-event-sender">
 		<span class="thumbnail">
 			<img alt="<%= userFullName %>" src="<%= userPortaitURL %>" />
@@ -60,7 +60,7 @@ else {
 			userFullName = "<a href=\"" + userDisplayURL + "\">" + userFullName + "</a>";
 			%>
 
-			<liferay-ui:message arguments="<%= userFullName %>" key='<%= notificationEventJSONObject.getString("title") %>' />
+			<liferay-ui:message arguments="<%= userFullName %>" key='<%= notificationEventJSONObject.getString("title") %>' translateArguments="<%= false %>" />
 		</div>
 
 		<div class="body">

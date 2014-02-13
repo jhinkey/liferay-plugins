@@ -485,6 +485,7 @@ public interface KBArticleModel extends BaseModel<KBArticle>, ResourcedModel,
 	/**
 	 * @deprecated As of 6.1.0, replaced by {@link #isApproved()}
 	 */
+	@Deprecated
 	@Override
 	public boolean getApproved();
 
@@ -535,14 +536,6 @@ public interface KBArticleModel extends BaseModel<KBArticle>, ResourcedModel,
 	 */
 	@Override
 	public boolean isIncomplete();
-
-	/**
-	 * Returns <code>true</code> if this k b article is in the Recycle Bin.
-	 *
-	 * @return <code>true</code> if this k b article is in the Recycle Bin; <code>false</code> otherwise
-	 */
-	@Override
-	public boolean isInTrash();
 
 	/**
 	 * Returns <code>true</code> if this k b article is pending.

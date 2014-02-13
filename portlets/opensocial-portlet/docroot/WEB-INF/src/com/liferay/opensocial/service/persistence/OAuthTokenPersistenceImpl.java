@@ -398,6 +398,10 @@ public class OAuthTokenPersistenceImpl extends BasePersistenceImpl<OAuthToken>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_S(gadgetKey, serviceName);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<OAuthToken> list = findByG_S(gadgetKey, serviceName, count - 1,
 				count, orderByComparator);
 
@@ -1110,6 +1114,10 @@ public class OAuthTokenPersistenceImpl extends BasePersistenceImpl<OAuthToken>
 	private static final String _FINDER_COLUMN_U_G_S_M_T_TOKENNAME_2 = "oAuthToken.tokenName = ?";
 	private static final String _FINDER_COLUMN_U_G_S_M_T_TOKENNAME_3 = "(oAuthToken.tokenName IS NULL OR oAuthToken.tokenName = '')";
 
+	public OAuthTokenPersistenceImpl() {
+		setModelClass(OAuthToken.class);
+	}
+
 	/**
 	 * Caches the o auth token in the entity cache if it is enabled.
 	 *
@@ -1162,7 +1170,7 @@ public class OAuthTokenPersistenceImpl extends BasePersistenceImpl<OAuthToken>
 			CacheRegistryUtil.clear(OAuthTokenImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(OAuthTokenImpl.class.getName());
+		EntityCacheUtil.clearCache(OAuthTokenImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1424,10 +1432,12 @@ public class OAuthTokenPersistenceImpl extends BasePersistenceImpl<OAuthToken>
 		}
 
 		EntityCacheUtil.putResult(OAuthTokenModelImpl.ENTITY_CACHE_ENABLED,
-			OAuthTokenImpl.class, oAuthToken.getPrimaryKey(), oAuthToken);
+			OAuthTokenImpl.class, oAuthToken.getPrimaryKey(), oAuthToken, false);
 
 		clearUniqueFindersCache(oAuthToken);
 		cacheUniqueFindersCache(oAuthToken);
+
+		oAuthToken.resetOriginalValues();
 
 		return oAuthToken;
 	}

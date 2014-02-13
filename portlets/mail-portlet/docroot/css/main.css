@@ -25,10 +25,6 @@
 		}
 	}
 
-	.add-account-button {
-		white-space: nowrap;
-	}
-
 	.unread {
 		font-weight: bold;
 
@@ -81,6 +77,14 @@
 
 	.add-folder-container .field-content, .search .field-content {
 		display: inline-block;
+	}
+}
+
+.aui .mail-portlet .table-bordered {
+	th, td {
+	 	&.attachments {
+			border-left: 0;
+		}
 	}
 }
 

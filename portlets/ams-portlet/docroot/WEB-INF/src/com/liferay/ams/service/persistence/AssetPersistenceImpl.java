@@ -83,6 +83,10 @@ public class AssetPersistenceImpl extends BasePersistenceImpl<Asset>
 			AssetModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
 
+	public AssetPersistenceImpl() {
+		setModelClass(Asset.class);
+	}
+
 	/**
 	 * Caches the asset in the entity cache if it is enabled.
 	 *
@@ -127,7 +131,7 @@ public class AssetPersistenceImpl extends BasePersistenceImpl<Asset>
 			CacheRegistryUtil.clear(AssetImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(AssetImpl.class.getName());
+		EntityCacheUtil.clearCache(AssetImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -298,7 +302,9 @@ public class AssetPersistenceImpl extends BasePersistenceImpl<Asset>
 		}
 
 		EntityCacheUtil.putResult(AssetModelImpl.ENTITY_CACHE_ENABLED,
-			AssetImpl.class, asset.getPrimaryKey(), asset);
+			AssetImpl.class, asset.getPrimaryKey(), asset, false);
+
+		asset.resetOriginalValues();
 
 		return asset;
 	}

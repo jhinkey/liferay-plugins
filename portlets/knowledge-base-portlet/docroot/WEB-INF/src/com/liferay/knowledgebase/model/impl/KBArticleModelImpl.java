@@ -248,6 +248,9 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		attributes.put("statusByUserName", getStatusByUserName());
 		attributes.put("statusDate", getStatusDate());
 
+		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
+		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
+
 		return attributes;
 	}
 
@@ -399,8 +402,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		}
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getUuid() {
 		if (_uuid == null) {
 			return StringPool.BLANK;
@@ -423,8 +426,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return GetterUtil.getString(_originalUuid);
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getKbArticleId() {
 		return _kbArticleId;
 	}
@@ -434,8 +437,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_kbArticleId = kbArticleId;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getResourcePrimKey() {
 		return _resourcePrimKey;
 	}
@@ -462,8 +465,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return _originalResourcePrimKey;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getGroupId() {
 		return _groupId;
 	}
@@ -485,8 +488,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return _originalGroupId;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getCompanyId() {
 		return _companyId;
 	}
@@ -508,8 +511,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return _originalCompanyId;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getUserId() {
 		return _userId;
 	}
@@ -529,8 +532,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_userUuid = userUuid;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getUserName() {
 		if (_userName == null) {
 			return StringPool.BLANK;
@@ -545,8 +548,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_userName = userName;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public Date getCreateDate() {
 		return _createDate;
 	}
@@ -556,8 +559,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_createDate = createDate;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public Date getModifiedDate() {
 		return _modifiedDate;
 	}
@@ -569,8 +572,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_modifiedDate = modifiedDate;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getRootResourcePrimKey() {
 		return _rootResourcePrimKey;
 	}
@@ -580,8 +583,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_rootResourcePrimKey = rootResourcePrimKey;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getParentResourcePrimKey() {
 		return _parentResourcePrimKey;
 	}
@@ -603,8 +606,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return _originalParentResourcePrimKey;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public int getVersion() {
 		return _version;
 	}
@@ -626,8 +629,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return _originalVersion;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getTitle() {
 		if (_title == null) {
 			return StringPool.BLANK;
@@ -642,8 +645,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_title = title;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getContent() {
 		if (_content == null) {
 			return StringPool.BLANK;
@@ -658,8 +661,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_content = content;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getDescription() {
 		if (_description == null) {
 			return StringPool.BLANK;
@@ -674,8 +677,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_description = description;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public double getPriority() {
 		return _priority;
 	}
@@ -685,8 +688,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_priority = priority;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getSections() {
 		if (_sections == null) {
 			return StringPool.BLANK;
@@ -711,8 +714,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return GetterUtil.getString(_originalSections);
 	}
 
-	@Override
 	@JSON
+	@Override
 	public int getViewCount() {
 		return _viewCount;
 	}
@@ -722,8 +725,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_viewCount = viewCount;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public boolean getLatest() {
 		return _latest;
 	}
@@ -750,8 +753,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return _originalLatest;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public boolean getMain() {
 		return _main;
 	}
@@ -778,8 +781,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return _originalMain;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public int getStatus() {
 		return _status;
 	}
@@ -801,8 +804,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		return _originalStatus;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getStatusByUserId() {
 		return _statusByUserId;
 	}
@@ -823,8 +826,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_statusByUserUuid = statusByUserUuid;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getStatusByUserName() {
 		if (_statusByUserName == null) {
 			return StringPool.BLANK;
@@ -839,8 +842,8 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 		_statusByUserName = statusByUserName;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public Date getStatusDate() {
 		return _statusDate;
 	}
@@ -859,6 +862,7 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 	/**
 	 * @deprecated As of 6.1.0, replaced by {@link #isApproved}
 	 */
+	@Deprecated
 	@Override
 	public boolean getApproved() {
 		return isApproved();
@@ -917,16 +921,6 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 	@Override
 	public boolean isIncomplete() {
 		if (getStatus() == WorkflowConstants.STATUS_INCOMPLETE) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-
-	@Override
-	public boolean isInTrash() {
-		if (getStatus() == WorkflowConstants.STATUS_IN_TRASH) {
 			return true;
 		}
 		else {
@@ -1056,6 +1050,16 @@ public class KBArticleModelImpl extends BaseModelImpl<KBArticle>
 	@Override
 	public int hashCode() {
 		return (int)getPrimaryKey();
+	}
+
+	@Override
+	public boolean isEntityCacheEnabled() {
+		return ENTITY_CACHE_ENABLED;
+	}
+
+	@Override
+	public boolean isFinderCacheEnabled() {
+		return FINDER_CACHE_ENABLED;
 	}
 
 	@Override

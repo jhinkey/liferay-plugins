@@ -360,6 +360,10 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUuid(uuid);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBTemplate> list = findByUuid(uuid, count - 1, count,
 				orderByComparator);
 
@@ -1179,6 +1183,10 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUuid_C(uuid, companyId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBTemplate> list = findByUuid_C(uuid, companyId, count - 1, count,
 				orderByComparator);
 
@@ -1707,6 +1715,10 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByGroupId(groupId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBTemplate> list = findByGroupId(groupId, count - 1, count,
 				orderByComparator);
 
@@ -1968,7 +1980,7 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBTemplateImpl.class);
@@ -2143,7 +2155,7 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 				KBTemplate.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -2272,7 +2284,7 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -2294,6 +2306,10 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 	}
 
 	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 = "kbTemplate.groupId = ?";
+
+	public KBTemplatePersistenceImpl() {
+		setModelClass(KBTemplate.class);
+	}
 
 	/**
 	 * Caches the k b template in the entity cache if it is enabled.
@@ -2344,7 +2360,7 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 			CacheRegistryUtil.clear(KBTemplateImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(KBTemplateImpl.class.getName());
+		EntityCacheUtil.clearCache(KBTemplateImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -2641,10 +2657,12 @@ public class KBTemplatePersistenceImpl extends BasePersistenceImpl<KBTemplate>
 		}
 
 		EntityCacheUtil.putResult(KBTemplateModelImpl.ENTITY_CACHE_ENABLED,
-			KBTemplateImpl.class, kbTemplate.getPrimaryKey(), kbTemplate);
+			KBTemplateImpl.class, kbTemplate.getPrimaryKey(), kbTemplate, false);
 
 		clearUniqueFindersCache(kbTemplate);
 		cacheUniqueFindersCache(kbTemplate);
+
+		kbTemplate.resetOriginalValues();
 
 		return kbTemplate;
 	}

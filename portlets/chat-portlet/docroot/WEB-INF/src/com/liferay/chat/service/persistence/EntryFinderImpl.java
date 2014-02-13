@@ -43,6 +43,7 @@ public class EntryFinderImpl
 	public static final String FIND_BY_OLD =
 		EntryFinder.class.getName() + ".findByOld";
 
+	@Override
 	public List<Entry> findByEmptyContent(
 			long fromUserId, long toUserId, int start, int end)
 		throws SystemException {
@@ -54,7 +55,7 @@ public class EntryFinderImpl
 
 			String sql = CustomSQLUtil.get(FIND_BY_EMPTY_CONTENT);
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addEntity("Chat_Entry", EntryImpl.class);
 
@@ -73,6 +74,7 @@ public class EntryFinderImpl
 		}
 	}
 
+	@Override
 	public List<Entry> findByNew(
 			long userId, long createDate, int start, int end)
 		throws SystemException {
@@ -88,7 +90,7 @@ public class EntryFinderImpl
 				sql = StringUtil.replace(sql, _FLAG_SQL, _CREATE_DATE_SQL);
 			}
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addEntity("Chat_Entry", EntryImpl.class);
 
@@ -114,6 +116,7 @@ public class EntryFinderImpl
 		}
 	}
 
+	@Override
 	public List<Entry> findByOld(long createDate, int start, int end)
 		throws SystemException {
 
@@ -124,7 +127,7 @@ public class EntryFinderImpl
 
 			String sql = CustomSQLUtil.get(FIND_BY_OLD);
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addEntity("Chat_Entry", EntryImpl.class);
 

@@ -347,6 +347,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByCompanyId(companyId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<MeetupsEntry> list = findByCompanyId(companyId, count - 1, count,
 				orderByComparator);
 
@@ -832,6 +836,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUserId(userId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<MeetupsEntry> list = findByUserId(userId, count - 1, count,
 				orderByComparator);
 
@@ -1057,6 +1065,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 
 	private static final String _FINDER_COLUMN_USERID_USERID_2 = "meetupsEntry.userId = ?";
 
+	public MeetupsEntryPersistenceImpl() {
+		setModelClass(MeetupsEntry.class);
+	}
+
 	/**
 	 * Caches the meetups entry in the entity cache if it is enabled.
 	 *
@@ -1102,7 +1114,7 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 			CacheRegistryUtil.clear(MeetupsEntryImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(MeetupsEntryImpl.class.getName());
+		EntityCacheUtil.clearCache(MeetupsEntryImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1316,7 +1328,10 @@ public class MeetupsEntryPersistenceImpl extends BasePersistenceImpl<MeetupsEntr
 		}
 
 		EntityCacheUtil.putResult(MeetupsEntryModelImpl.ENTITY_CACHE_ENABLED,
-			MeetupsEntryImpl.class, meetupsEntry.getPrimaryKey(), meetupsEntry);
+			MeetupsEntryImpl.class, meetupsEntry.getPrimaryKey(), meetupsEntry,
+			false);
+
+		meetupsEntry.resetOriginalValues();
 
 		return meetupsEntry;
 	}

@@ -61,7 +61,7 @@ public class GadgetUtil {
 	/**
 	 * @see com.liferay.portal.service.persistence.BasePersistence#countWithDynamicQuery(DynamicQuery)
 	 */
-	public long countWithDynamicQuery(DynamicQuery dynamicQuery)
+	public static long countWithDynamicQuery(DynamicQuery dynamicQuery)
 		throws SystemException {
 		return getPersistence().countWithDynamicQuery(dynamicQuery);
 	}
@@ -1106,6 +1106,7 @@ public class GadgetUtil {
 	/**
 	 * @deprecated As of 6.2.0
 	 */
+	@Deprecated
 	public void setPersistence(GadgetPersistence persistence) {
 	}
 

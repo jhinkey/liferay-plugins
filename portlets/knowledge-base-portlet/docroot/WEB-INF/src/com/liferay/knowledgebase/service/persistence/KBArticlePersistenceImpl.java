@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -360,6 +361,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public KBArticle fetchByUuid_Last(String uuid,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUuid(uuid);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<KBArticle> list = findByUuid(uuid, count - 1, count,
 				orderByComparator);
@@ -1179,6 +1184,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUuid_C(uuid, companyId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByUuid_C(uuid, companyId, count - 1, count,
 				orderByComparator);
 
@@ -1717,6 +1726,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByResourcePrimKey(resourcePrimKey);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByResourcePrimKey(resourcePrimKey,
 				count - 1, count, orderByComparator);
 
@@ -2231,6 +2244,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByR_G(resourcePrimKey, groupId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByR_G(resourcePrimKey, groupId, count - 1,
 				count, orderByComparator);
 
@@ -2504,7 +2521,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -2684,7 +2701,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -2827,7 +2844,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -3375,6 +3392,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByR_L(resourcePrimKey, latest);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByR_L(resourcePrimKey, latest, count - 1,
 				count, orderByComparator);
 
@@ -3595,7 +3616,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByR_L(long[] resourcePrimKeies, boolean latest,
 		int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((resourcePrimKeies != null) && (resourcePrimKeies.length == 1)) {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
+		if (resourcePrimKeies.length == 1) {
 			return findByR_L(resourcePrimKeies[0], latest, start, end,
 				orderByComparator);
 		}
@@ -3638,35 +3666,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_L_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_L_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_L_LATEST_5);
+			query.append(_FINDER_COLUMN_R_L_LATEST_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -3687,10 +3704,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(latest);
 
@@ -3812,6 +3825,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByR_L(long[] resourcePrimKeies, boolean latest)
 		throws SystemException {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(resourcePrimKeies), latest
 			};
@@ -3824,35 +3844,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_L_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_L_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_L_LATEST_5);
+			query.append(_FINDER_COLUMN_R_L_LATEST_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -3864,10 +3873,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(latest);
 
@@ -3891,11 +3896,8 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_R_L_RESOURCEPRIMKEY_2 = "kbArticle.resourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_R_L_RESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_L_RESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_R_L_RESOURCEPRIMKEY_7 = "kbArticle.resourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_R_L_LATEST_2 = "kbArticle.latest = ?";
-	private static final String _FINDER_COLUMN_R_L_LATEST_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_L_LATEST_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_R_M = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_M",
@@ -4187,6 +4189,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByR_M(resourcePrimKey, main);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByR_M(resourcePrimKey, main, count - 1,
 				count, orderByComparator);
 
@@ -4406,7 +4412,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByR_M(long[] resourcePrimKeies, boolean main,
 		int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((resourcePrimKeies != null) && (resourcePrimKeies.length == 1)) {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
+		if (resourcePrimKeies.length == 1) {
 			return findByR_M(resourcePrimKeies[0], main, start, end,
 				orderByComparator);
 		}
@@ -4447,35 +4460,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_M_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_M_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_M_MAIN_5);
+			query.append(_FINDER_COLUMN_R_M_MAIN_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -4496,10 +4498,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(main);
 
@@ -4621,6 +4619,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByR_M(long[] resourcePrimKeies, boolean main)
 		throws SystemException {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(resourcePrimKeies), main
 			};
@@ -4633,35 +4638,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_M_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_M_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_M_MAIN_5);
+			query.append(_FINDER_COLUMN_R_M_MAIN_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -4673,10 +4667,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(main);
 
@@ -4700,11 +4690,8 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_R_M_RESOURCEPRIMKEY_2 = "kbArticle.resourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_R_M_RESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_M_RESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_R_M_RESOURCEPRIMKEY_7 = "kbArticle.resourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_R_M_MAIN_2 = "kbArticle.main = ?";
-	private static final String _FINDER_COLUMN_R_M_MAIN_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_M_MAIN_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_R_S = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_S",
@@ -4996,6 +4983,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByR_S(resourcePrimKey, status);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByR_S(resourcePrimKey, status, count - 1,
 				count, orderByComparator);
 
@@ -5215,7 +5206,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByR_S(long[] resourcePrimKeies, int status,
 		int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((resourcePrimKeies != null) && (resourcePrimKeies.length == 1)) {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
+		if (resourcePrimKeies.length == 1) {
 			return findByR_S(resourcePrimKeies[0], status, start, end,
 				orderByComparator);
 		}
@@ -5258,35 +5256,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_S_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_S_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_S_STATUS_5);
+			query.append(_FINDER_COLUMN_R_S_STATUS_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -5307,10 +5294,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(status);
 
@@ -5432,6 +5415,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByR_S(long[] resourcePrimKeies, int status)
 		throws SystemException {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(resourcePrimKeies), status
 			};
@@ -5444,35 +5434,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_S_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_S_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_S_STATUS_5);
+			query.append(_FINDER_COLUMN_R_S_STATUS_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -5484,10 +5463,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(status);
 
@@ -5511,11 +5486,8 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_R_S_RESOURCEPRIMKEY_2 = "kbArticle.resourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_R_S_RESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_S_RESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_R_S_RESOURCEPRIMKEY_7 = "kbArticle.resourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_R_S_STATUS_2 = "kbArticle.status = ?";
-	private static final String _FINDER_COLUMN_R_S_STATUS_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_S_STATUS_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_L = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_L",
@@ -5801,6 +5773,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_L(groupId, latest);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByG_L(groupId, latest, count - 1, count,
 				orderByComparator);
 
@@ -6073,7 +6049,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -6253,7 +6229,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -6396,7 +6372,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -6704,6 +6680,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_M(groupId, main);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByG_M(groupId, main, count - 1, count,
 				orderByComparator);
 
@@ -6976,7 +6956,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -7156,7 +7136,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -7298,7 +7278,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -7608,6 +7588,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_S(groupId, status);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByG_S(groupId, status, count - 1, count,
 				orderByComparator);
 
@@ -7879,7 +7863,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -8059,7 +8043,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -8200,7 +8184,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -8510,6 +8494,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public KBArticle fetchByC_L_Last(long companyId, boolean latest,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByC_L(companyId, latest);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<KBArticle> list = findByC_L(companyId, latest, count - 1, count,
 				orderByComparator);
@@ -9034,6 +9022,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByC_M(companyId, main);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByC_M(companyId, main, count - 1, count,
 				orderByComparator);
 
@@ -9557,6 +9549,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public KBArticle fetchByC_S_Last(long companyId, int status,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByC_S(companyId, status);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<KBArticle> list = findByC_S(companyId, status, count - 1, count,
 				orderByComparator);
@@ -10088,6 +10084,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		throws SystemException {
 		int count = countByP_L(parentResourcePrimKey, latest);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByP_L(parentResourcePrimKey, latest,
 				count - 1, count, orderByComparator);
 
@@ -10308,8 +10308,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByP_L(long[] parentResourcePrimKeies,
 		boolean latest, int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((parentResourcePrimKeies != null) &&
-				(parentResourcePrimKeies.length == 1)) {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
+		if (parentResourcePrimKeies.length == 1) {
 			return findByP_L(parentResourcePrimKeies[0], latest, start, end,
 				orderByComparator);
 		}
@@ -10352,36 +10358,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_P_L_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_P_L_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_P_L_LATEST_5);
+			query.append(_FINDER_COLUMN_P_L_LATEST_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -10402,10 +10396,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(latest);
 
@@ -10527,6 +10517,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByP_L(long[] parentResourcePrimKeies, boolean latest)
 		throws SystemException {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(parentResourcePrimKeies), latest
 			};
@@ -10539,36 +10536,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_P_L_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_P_L_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_P_L_LATEST_5);
+			query.append(_FINDER_COLUMN_P_L_LATEST_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -10580,10 +10565,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(latest);
 
@@ -10607,11 +10588,8 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_P_L_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_P_L_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_P_L_PARENTRESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_P_L_PARENTRESOURCEPRIMKEY_7 = "kbArticle.parentResourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_P_L_LATEST_2 = "kbArticle.latest = ?";
-	private static final String _FINDER_COLUMN_P_L_LATEST_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_P_L_LATEST_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_P_M = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByP_M",
@@ -10903,6 +10881,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByP_M(parentResourcePrimKey, main);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByP_M(parentResourcePrimKey, main,
 				count - 1, count, orderByComparator);
 
@@ -11123,8 +11105,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByP_M(long[] parentResourcePrimKeies,
 		boolean main, int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((parentResourcePrimKeies != null) &&
-				(parentResourcePrimKeies.length == 1)) {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
+		if (parentResourcePrimKeies.length == 1) {
 			return findByP_M(parentResourcePrimKeies[0], main, start, end,
 				orderByComparator);
 		}
@@ -11167,36 +11155,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_P_M_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_P_M_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_P_M_MAIN_5);
+			query.append(_FINDER_COLUMN_P_M_MAIN_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -11217,10 +11193,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(main);
 
@@ -11342,6 +11314,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByP_M(long[] parentResourcePrimKeies, boolean main)
 		throws SystemException {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(parentResourcePrimKeies), main
 			};
@@ -11354,36 +11333,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_P_M_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_P_M_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_P_M_MAIN_5);
+			query.append(_FINDER_COLUMN_P_M_MAIN_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -11395,10 +11362,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(main);
 
@@ -11422,11 +11385,8 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_P_M_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_P_M_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_P_M_PARENTRESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_P_M_PARENTRESOURCEPRIMKEY_7 = "kbArticle.parentResourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_P_M_MAIN_2 = "kbArticle.main = ?";
-	private static final String _FINDER_COLUMN_P_M_MAIN_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_P_M_MAIN_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_P_S = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByP_S",
@@ -11718,6 +11678,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByP_S(parentResourcePrimKey, status);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByP_S(parentResourcePrimKey, status,
 				count - 1, count, orderByComparator);
 
@@ -11938,8 +11902,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByP_S(long[] parentResourcePrimKeies,
 		int status, int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((parentResourcePrimKeies != null) &&
-				(parentResourcePrimKeies.length == 1)) {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
+		if (parentResourcePrimKeies.length == 1) {
 			return findByP_S(parentResourcePrimKeies[0], status, start, end,
 				orderByComparator);
 		}
@@ -11982,36 +11952,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_P_S_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_P_S_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_P_S_STATUS_5);
+			query.append(_FINDER_COLUMN_P_S_STATUS_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -12032,10 +11990,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(status);
 
@@ -12157,6 +12111,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByP_S(long[] parentResourcePrimKeies, int status)
 		throws SystemException {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(parentResourcePrimKeies), status
 			};
@@ -12169,36 +12130,24 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_P_S_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_P_S_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_P_S_STATUS_5);
+			query.append(_FINDER_COLUMN_P_S_STATUS_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -12210,10 +12159,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(status);
 
@@ -12237,11 +12182,8 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_P_S_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_P_S_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_P_S_PARENTRESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_P_S_PARENTRESOURCEPRIMKEY_7 = "kbArticle.parentResourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_P_S_STATUS_2 = "kbArticle.status = ?";
-	private static final String _FINDER_COLUMN_P_S_STATUS_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_P_S_STATUS_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_R_G_L = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_G_L",
@@ -12564,6 +12506,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		throws SystemException {
 		int count = countByR_G_L(resourcePrimKey, groupId, latest);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByR_G_L(resourcePrimKey, groupId, latest,
 				count - 1, count, orderByComparator);
 
@@ -12850,7 +12796,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -13036,7 +12982,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -13138,6 +13084,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				orderByComparator);
 		}
 
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -13147,43 +13100,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
-
-		if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (resourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < resourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_7);
 
-				if ((i + 1) < resourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(resourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_R_G_L_GROUPID_5);
+		query.append(_FINDER_COLUMN_R_G_L_GROUPID_2);
 
-		conjunctionable = true;
+		query.append(_FINDER_COLUMN_R_G_L_LATEST_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_R_G_L_LATEST_5);
-
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -13217,7 +13153,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -13227,10 +13163,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			}
 
 			QueryPos qPos = QueryPos.getInstance(q);
-
-			if (resourcePrimKeies != null) {
-				qPos.add(resourcePrimKeies);
-			}
 
 			qPos.add(groupId);
 
@@ -13307,7 +13239,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByR_G_L(long[] resourcePrimKeies, long groupId,
 		boolean latest, int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((resourcePrimKeies != null) && (resourcePrimKeies.length == 1)) {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
+		if (resourcePrimKeies.length == 1) {
 			return findByR_G_L(resourcePrimKeies[0], groupId, latest, start,
 				end, orderByComparator);
 		}
@@ -13351,43 +13290,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_G_L_GROUPID_5);
+			query.append(_FINDER_COLUMN_R_G_L_GROUPID_2);
 
-			conjunctionable = true;
+			query.append(_FINDER_COLUMN_R_G_L_LATEST_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_R_G_L_LATEST_5);
-
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -13408,10 +13330,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(groupId);
 
@@ -13542,6 +13460,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByR_G_L(long[] resourcePrimKeies, long groupId,
 		boolean latest) throws SystemException {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(resourcePrimKeies), groupId, latest
 			};
@@ -13554,43 +13479,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_G_L_GROUPID_5);
+			query.append(_FINDER_COLUMN_R_G_L_GROUPID_2);
 
-			conjunctionable = true;
+			query.append(_FINDER_COLUMN_R_G_L_LATEST_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_R_G_L_LATEST_5);
-
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -13602,10 +13510,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(groupId);
 
@@ -13665,7 +13569,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -13706,47 +13610,37 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			return countByR_G_L(resourcePrimKeies, groupId, latest);
 		}
 
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
-
-		if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (resourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < resourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_7);
 
-				if ((i + 1) < resourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(resourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_R_G_L_GROUPID_5);
+		query.append(_FINDER_COLUMN_R_G_L_GROUPID_2);
 
-		conjunctionable = true;
+		query.append(_FINDER_COLUMN_R_G_L_LATEST_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_R_G_L_LATEST_5);
-
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -13757,16 +13651,12 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
 
 			QueryPos qPos = QueryPos.getInstance(q);
-
-			if (resourcePrimKeies != null) {
-				qPos.add(resourcePrimKeies);
-			}
 
 			qPos.add(groupId);
 
@@ -13785,14 +13675,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_2 = "kbArticle.resourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_R_G_L_RESOURCEPRIMKEY_7 = "kbArticle.resourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_R_G_L_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_R_G_L_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_L_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_R_G_L_LATEST_2 = "kbArticle.latest = ?";
-	private static final String _FINDER_COLUMN_R_G_L_LATEST_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_L_LATEST_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_R_G_M = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_G_M",
@@ -14115,6 +14000,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		throws SystemException {
 		int count = countByR_G_M(resourcePrimKey, groupId, main);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByR_G_M(resourcePrimKey, groupId, main,
 				count - 1, count, orderByComparator);
 
@@ -14401,7 +14290,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -14587,7 +14476,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -14689,6 +14578,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				orderByComparator);
 		}
 
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -14698,43 +14594,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
-
-		if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (resourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < resourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_7);
 
-				if ((i + 1) < resourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(resourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_R_G_M_GROUPID_5);
+		query.append(_FINDER_COLUMN_R_G_M_GROUPID_2);
 
-		conjunctionable = true;
+		query.append(_FINDER_COLUMN_R_G_M_MAIN_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_R_G_M_MAIN_5);
-
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -14768,7 +14647,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -14778,10 +14657,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			}
 
 			QueryPos qPos = QueryPos.getInstance(q);
-
-			if (resourcePrimKeies != null) {
-				qPos.add(resourcePrimKeies);
-			}
 
 			qPos.add(groupId);
 
@@ -14858,7 +14733,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByR_G_M(long[] resourcePrimKeies, long groupId,
 		boolean main, int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((resourcePrimKeies != null) && (resourcePrimKeies.length == 1)) {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
+		if (resourcePrimKeies.length == 1) {
 			return findByR_G_M(resourcePrimKeies[0], groupId, main, start, end,
 				orderByComparator);
 		}
@@ -14902,43 +14784,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_G_M_GROUPID_5);
+			query.append(_FINDER_COLUMN_R_G_M_GROUPID_2);
 
-			conjunctionable = true;
+			query.append(_FINDER_COLUMN_R_G_M_MAIN_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_R_G_M_MAIN_5);
-
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -14959,10 +14824,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(groupId);
 
@@ -15093,6 +14954,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByR_G_M(long[] resourcePrimKeies, long groupId, boolean main)
 		throws SystemException {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(resourcePrimKeies), groupId, main
 			};
@@ -15105,43 +14973,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_G_M_GROUPID_5);
+			query.append(_FINDER_COLUMN_R_G_M_GROUPID_2);
 
-			conjunctionable = true;
+			query.append(_FINDER_COLUMN_R_G_M_MAIN_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_R_G_M_MAIN_5);
-
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -15153,10 +15004,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(groupId);
 
@@ -15216,7 +15063,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -15257,47 +15104,37 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			return countByR_G_M(resourcePrimKeies, groupId, main);
 		}
 
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
-
-		if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (resourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < resourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_7);
 
-				if ((i + 1) < resourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(resourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_R_G_M_GROUPID_5);
+		query.append(_FINDER_COLUMN_R_G_M_GROUPID_2);
 
-		conjunctionable = true;
+		query.append(_FINDER_COLUMN_R_G_M_MAIN_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_R_G_M_MAIN_5);
-
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -15308,16 +15145,12 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
 
 			QueryPos qPos = QueryPos.getInstance(q);
-
-			if (resourcePrimKeies != null) {
-				qPos.add(resourcePrimKeies);
-			}
 
 			qPos.add(groupId);
 
@@ -15336,14 +15169,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_2 = "kbArticle.resourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_R_G_M_RESOURCEPRIMKEY_7 = "kbArticle.resourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_R_G_M_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_R_G_M_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_M_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_R_G_M_MAIN_2 = "kbArticle.main = ?";
-	private static final String _FINDER_COLUMN_R_G_M_MAIN_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_M_MAIN_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_R_G_S = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_G_S",
@@ -15666,6 +15494,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		throws SystemException {
 		int count = countByR_G_S(resourcePrimKey, groupId, status);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByR_G_S(resourcePrimKey, groupId, status,
 				count - 1, count, orderByComparator);
 
@@ -15951,7 +15783,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -16137,7 +15969,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -16238,6 +16070,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				orderByComparator);
 		}
 
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -16247,43 +16086,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
-
-		if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (resourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < resourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_7);
 
-				if ((i + 1) < resourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(resourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_R_G_S_GROUPID_5);
+		query.append(_FINDER_COLUMN_R_G_S_GROUPID_2);
 
-		conjunctionable = true;
+		query.append(_FINDER_COLUMN_R_G_S_STATUS_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_R_G_S_STATUS_5);
-
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -16317,7 +16139,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -16327,10 +16149,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			}
 
 			QueryPos qPos = QueryPos.getInstance(q);
-
-			if (resourcePrimKeies != null) {
-				qPos.add(resourcePrimKeies);
-			}
 
 			qPos.add(groupId);
 
@@ -16407,7 +16225,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByR_G_S(long[] resourcePrimKeies, long groupId,
 		int status, int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((resourcePrimKeies != null) && (resourcePrimKeies.length == 1)) {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
+		if (resourcePrimKeies.length == 1) {
 			return findByR_G_S(resourcePrimKeies[0], groupId, status, start,
 				end, orderByComparator);
 		}
@@ -16451,43 +16276,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_G_S_GROUPID_5);
+			query.append(_FINDER_COLUMN_R_G_S_GROUPID_2);
 
-			conjunctionable = true;
+			query.append(_FINDER_COLUMN_R_G_S_STATUS_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_R_G_S_STATUS_5);
-
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -16508,10 +16316,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(groupId);
 
@@ -16642,6 +16446,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByR_G_S(long[] resourcePrimKeies, long groupId, int status)
 		throws SystemException {
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				StringUtil.merge(resourcePrimKeies), groupId, status
 			};
@@ -16654,43 +16465,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
-
-			if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (resourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < resourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_7);
 
-					if ((i + 1) < resourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(resourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_R_G_S_GROUPID_5);
+			query.append(_FINDER_COLUMN_R_G_S_GROUPID_2);
 
-			conjunctionable = true;
+			query.append(_FINDER_COLUMN_R_G_S_STATUS_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_R_G_S_STATUS_5);
-
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -16702,10 +16496,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				Query q = session.createQuery(sql);
 
 				QueryPos qPos = QueryPos.getInstance(q);
-
-				if (resourcePrimKeies != null) {
-					qPos.add(resourcePrimKeies);
-				}
 
 				qPos.add(groupId);
 
@@ -16765,7 +16555,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -16806,47 +16596,37 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			return countByR_G_S(resourcePrimKeies, groupId, status);
 		}
 
+		if (resourcePrimKeies == null) {
+			resourcePrimKeies = new long[0];
+		}
+		else {
+			resourcePrimKeies = ArrayUtil.unique(resourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
-
-		if ((resourcePrimKeies == null) || (resourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (resourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < resourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_7);
 
-				if ((i + 1) < resourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(resourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_R_G_S_GROUPID_5);
+		query.append(_FINDER_COLUMN_R_G_S_GROUPID_2);
 
-		conjunctionable = true;
+		query.append(_FINDER_COLUMN_R_G_S_STATUS_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_R_G_S_STATUS_5);
-
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -16857,16 +16637,12 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
 
 			QueryPos qPos = QueryPos.getInstance(q);
-
-			if (resourcePrimKeies != null) {
-				qPos.add(resourcePrimKeies);
-			}
 
 			qPos.add(groupId);
 
@@ -16885,14 +16661,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_2 = "kbArticle.resourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_R_G_S_RESOURCEPRIMKEY_7 = "kbArticle.resourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_R_G_S_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_R_G_S_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_S_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_R_G_S_STATUS_2 = "kbArticle.status = ?";
-	private static final String _FINDER_COLUMN_R_G_S_STATUS_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_R_G_S_STATUS_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_P_L = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_L",
@@ -17218,6 +16989,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_P_L(groupId, parentResourcePrimKey, latest);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByG_P_L(groupId, parentResourcePrimKey,
 				latest, count - 1, count, orderByComparator);
 
@@ -17504,7 +17279,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -17692,7 +17467,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -17795,6 +17570,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				end, orderByComparator);
 		}
 
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -17804,44 +17586,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_L_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_L_GROUPID_5);
-
-		conjunctionable = true;
-
-		if ((parentResourcePrimKeies == null) ||
-				(parentResourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (parentResourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_7);
 
-				if ((i + 1) < parentResourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(parentResourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_L_LATEST_5);
+		query.append(_FINDER_COLUMN_G_P_L_LATEST_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -17875,7 +17639,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -17887,10 +17651,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			qPos.add(groupId);
-
-			if (parentResourcePrimKeies != null) {
-				qPos.add(parentResourcePrimKeies);
-			}
 
 			qPos.add(latest);
 
@@ -17968,8 +17728,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByG_P_L(long groupId,
 		long[] parentResourcePrimKeies, boolean latest, int start, int end,
 		OrderByComparator orderByComparator) throws SystemException {
-		if ((parentResourcePrimKeies != null) &&
-				(parentResourcePrimKeies.length == 1)) {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
+		if (parentResourcePrimKeies.length == 1) {
 			return findByG_P_L(groupId, parentResourcePrimKeies[0], latest,
 				start, end, orderByComparator);
 		}
@@ -18013,44 +17779,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_L_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_L_GROUPID_5);
-
-			conjunctionable = true;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_L_LATEST_5);
+			query.append(_FINDER_COLUMN_G_P_L_LATEST_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -18073,10 +17821,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				qPos.add(groupId);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(latest);
 
@@ -18207,6 +17951,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByG_P_L(long groupId, long[] parentResourcePrimKeies,
 		boolean latest) throws SystemException {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				groupId, StringUtil.merge(parentResourcePrimKeies), latest
 			};
@@ -18219,44 +17970,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_L_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_L_GROUPID_5);
-
-			conjunctionable = true;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_L_LATEST_5);
+			query.append(_FINDER_COLUMN_G_P_L_LATEST_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -18270,10 +18003,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				qPos.add(groupId);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(latest);
 
@@ -18331,7 +18060,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -18372,48 +18101,37 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			return countByG_P_L(groupId, parentResourcePrimKeies, latest);
 		}
 
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_L_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_L_GROUPID_5);
-
-		conjunctionable = true;
-
-		if ((parentResourcePrimKeies == null) ||
-				(parentResourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (parentResourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_7);
 
-				if ((i + 1) < parentResourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(parentResourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_L_LATEST_5);
+		query.append(_FINDER_COLUMN_G_P_L_LATEST_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -18424,7 +18142,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -18432,10 +18150,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			qPos.add(groupId);
-
-			if (parentResourcePrimKeies != null) {
-				qPos.add(parentResourcePrimKeies);
-			}
 
 			qPos.add(latest);
 
@@ -18452,14 +18166,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_G_P_L_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_L_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_L_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_G_P_L_PARENTRESOURCEPRIMKEY_7 = "kbArticle.parentResourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_G_P_L_LATEST_2 = "kbArticle.latest = ?";
-	private static final String _FINDER_COLUMN_G_P_L_LATEST_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_L_LATEST_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_P_M = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_M",
@@ -18785,6 +18494,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_P_M(groupId, parentResourcePrimKey, main);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByG_P_M(groupId, parentResourcePrimKey,
 				main, count - 1, count, orderByComparator);
 
@@ -19071,7 +18784,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -19259,7 +18972,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -19361,6 +19074,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				end, orderByComparator);
 		}
 
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -19370,44 +19090,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_M_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_M_GROUPID_5);
-
-		conjunctionable = true;
-
-		if ((parentResourcePrimKeies == null) ||
-				(parentResourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (parentResourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_7);
 
-				if ((i + 1) < parentResourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(parentResourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_M_MAIN_5);
+		query.append(_FINDER_COLUMN_G_P_M_MAIN_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -19441,7 +19143,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -19453,10 +19155,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			qPos.add(groupId);
-
-			if (parentResourcePrimKeies != null) {
-				qPos.add(parentResourcePrimKeies);
-			}
 
 			qPos.add(main);
 
@@ -19533,8 +19231,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByG_P_M(long groupId,
 		long[] parentResourcePrimKeies, boolean main, int start, int end,
 		OrderByComparator orderByComparator) throws SystemException {
-		if ((parentResourcePrimKeies != null) &&
-				(parentResourcePrimKeies.length == 1)) {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
+		if (parentResourcePrimKeies.length == 1) {
 			return findByG_P_M(groupId, parentResourcePrimKeies[0], main,
 				start, end, orderByComparator);
 		}
@@ -19578,44 +19282,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_M_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_M_GROUPID_5);
-
-			conjunctionable = true;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_M_MAIN_5);
+			query.append(_FINDER_COLUMN_G_P_M_MAIN_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -19638,10 +19324,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				qPos.add(groupId);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(main);
 
@@ -19770,6 +19452,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByG_P_M(long groupId, long[] parentResourcePrimKeies,
 		boolean main) throws SystemException {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				groupId, StringUtil.merge(parentResourcePrimKeies), main
 			};
@@ -19782,44 +19471,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_M_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_M_GROUPID_5);
-
-			conjunctionable = true;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_M_MAIN_5);
+			query.append(_FINDER_COLUMN_G_P_M_MAIN_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -19833,10 +19504,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				qPos.add(groupId);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(main);
 
@@ -19894,7 +19561,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -19935,48 +19602,37 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			return countByG_P_M(groupId, parentResourcePrimKeies, main);
 		}
 
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_M_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_M_GROUPID_5);
-
-		conjunctionable = true;
-
-		if ((parentResourcePrimKeies == null) ||
-				(parentResourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (parentResourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_7);
 
-				if ((i + 1) < parentResourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(parentResourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_M_MAIN_5);
+		query.append(_FINDER_COLUMN_G_P_M_MAIN_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -19987,7 +19643,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -19995,10 +19651,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			qPos.add(groupId);
-
-			if (parentResourcePrimKeies != null) {
-				qPos.add(parentResourcePrimKeies);
-			}
 
 			qPos.add(main);
 
@@ -20015,14 +19667,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_G_P_M_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_M_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_M_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_G_P_M_PARENTRESOURCEPRIMKEY_7 = "kbArticle.parentResourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_G_P_M_MAIN_2 = "kbArticle.main = ?";
-	private static final String _FINDER_COLUMN_G_P_M_MAIN_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_M_MAIN_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_P_S = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_S",
@@ -20348,6 +19995,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_P_S(groupId, parentResourcePrimKey, status);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<KBArticle> list = findByG_P_S(groupId, parentResourcePrimKey,
 				status, count - 1, count, orderByComparator);
 
@@ -20634,7 +20285,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -20822,7 +20473,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -20924,6 +20575,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				end, orderByComparator);
 		}
 
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -20933,44 +20591,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_S_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_S_GROUPID_5);
-
-		conjunctionable = true;
-
-		if ((parentResourcePrimKeies == null) ||
-				(parentResourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (parentResourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_7);
 
-				if ((i + 1) < parentResourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(parentResourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_S_STATUS_5);
+		query.append(_FINDER_COLUMN_G_P_S_STATUS_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -21004,7 +20644,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -21016,10 +20656,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			qPos.add(groupId);
-
-			if (parentResourcePrimKeies != null) {
-				qPos.add(parentResourcePrimKeies);
-			}
 
 			qPos.add(status);
 
@@ -21096,8 +20732,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByG_P_S(long groupId,
 		long[] parentResourcePrimKeies, int status, int start, int end,
 		OrderByComparator orderByComparator) throws SystemException {
-		if ((parentResourcePrimKeies != null) &&
-				(parentResourcePrimKeies.length == 1)) {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
+		if (parentResourcePrimKeies.length == 1) {
 			return findByG_P_S(groupId, parentResourcePrimKeies[0], status,
 				start, end, orderByComparator);
 		}
@@ -21141,44 +20783,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_S_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_S_GROUPID_5);
-
-			conjunctionable = true;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_S_STATUS_5);
+			query.append(_FINDER_COLUMN_G_P_S_STATUS_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -21201,10 +20825,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				qPos.add(groupId);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(status);
 
@@ -21335,6 +20955,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByG_P_S(long groupId, long[] parentResourcePrimKeies,
 		int status) throws SystemException {
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		Object[] finderArgs = new Object[] {
 				groupId, StringUtil.merge(parentResourcePrimKeies), status
 			};
@@ -21347,44 +20974,26 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_S_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_S_GROUPID_5);
-
-			conjunctionable = true;
-
-			if ((parentResourcePrimKeies == null) ||
-					(parentResourcePrimKeies.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (parentResourcePrimKeies.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
-				for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-					query.append(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_5);
+				query.append(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_7);
 
-					if ((i + 1) < parentResourcePrimKeies.length) {
-						query.append(WHERE_OR);
-					}
-				}
+				query.append(StringUtil.merge(parentResourcePrimKeies));
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
+				query.append(StringPool.CLOSE_PARENTHESIS);
 
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_S_STATUS_5);
+			query.append(_FINDER_COLUMN_G_P_S_STATUS_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -21398,10 +21007,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				QueryPos qPos = QueryPos.getInstance(q);
 
 				qPos.add(groupId);
-
-				if (parentResourcePrimKeies != null) {
-					qPos.add(parentResourcePrimKeies);
-				}
 
 				qPos.add(status);
 
@@ -21459,7 +21064,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -21500,48 +21105,37 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			return countByG_P_S(groupId, parentResourcePrimKeies, status);
 		}
 
+		if (parentResourcePrimKeies == null) {
+			parentResourcePrimKeies = new long[0];
+		}
+		else {
+			parentResourcePrimKeies = ArrayUtil.unique(parentResourcePrimKeies);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_S_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_S_GROUPID_5);
-
-		conjunctionable = true;
-
-		if ((parentResourcePrimKeies == null) ||
-				(parentResourcePrimKeies.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (parentResourcePrimKeies.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
-			for (int i = 0; i < parentResourcePrimKeies.length; i++) {
-				query.append(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_5);
+			query.append(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_7);
 
-				if ((i + 1) < parentResourcePrimKeies.length) {
-					query.append(WHERE_OR);
-				}
-			}
+			query.append(StringUtil.merge(parentResourcePrimKeies));
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
+			query.append(StringPool.CLOSE_PARENTHESIS);
 
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_S_STATUS_5);
+		query.append(_FINDER_COLUMN_G_P_S_STATUS_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -21552,7 +21146,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -21560,10 +21154,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			QueryPos qPos = QueryPos.getInstance(q);
 
 			qPos.add(groupId);
-
-			if (parentResourcePrimKeies != null) {
-				qPos.add(parentResourcePrimKeies);
-			}
 
 			qPos.add(status);
 
@@ -21580,14 +21170,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_G_P_S_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_S_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_2) + ")";
+	private static final String _FINDER_COLUMN_G_P_S_PARENTRESOURCEPRIMKEY_7 = "kbArticle.parentResourcePrimKey IN (";
 	private static final String _FINDER_COLUMN_G_P_S_STATUS_2 = "kbArticle.status = ?";
-	private static final String _FINDER_COLUMN_G_P_S_STATUS_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_STATUS_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_P_S_L = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_S_L",
@@ -21687,7 +21272,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			for (KBArticle kbArticle : list) {
 				if ((groupId != kbArticle.getGroupId()) ||
 						(parentResourcePrimKey != kbArticle.getParentResourcePrimKey()) ||
-						!Validator.equals(sections, kbArticle.getSections()) ||
+						!StringUtil.wildcardMatches(kbArticle.getSections(),
+							sections, CharPool.UNDERLINE, CharPool.PERCENT,
+							CharPool.BACK_SLASH, true) ||
 						(latest != kbArticle.getLatest())) {
 					list = null;
 
@@ -21921,6 +21508,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_P_S_L(groupId, parentResourcePrimKey, sections,
 				latest);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<KBArticle> list = findByG_P_S_L(groupId, parentResourcePrimKey,
 				sections, latest, count - 1, count, orderByComparator);
@@ -22248,7 +21839,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -22456,7 +22047,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -22567,6 +22158,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				latest, start, end, orderByComparator);
 		}
 
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -22576,29 +22175,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_S_L_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
+		query.append(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_2);
 
-		query.append(_FINDER_COLUMN_G_P_S_L_GROUPID_5);
-
-		conjunctionable = true;
-
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_5);
-
-		conjunctionable = true;
-
-		if ((sectionses == null) || (sectionses.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (sectionses.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
 			for (int i = 0; i < sectionses.length; i++) {
@@ -22621,16 +22202,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
-
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_S_L_LATEST_5);
+		query.append(_FINDER_COLUMN_G_P_S_L_LATEST_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -22664,7 +22242,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -22679,8 +22257,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			qPos.add(parentResourcePrimKey);
 
-			if (sectionses != null) {
-				qPos.add(sectionses);
+			for (String sections : sectionses) {
+				if ((sections != null) && !sections.isEmpty()) {
+					qPos.add(sections);
+				}
 			}
 
 			qPos.add(latest);
@@ -22763,7 +22343,15 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		long parentResourcePrimKey, String[] sectionses, boolean latest,
 		int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((sectionses != null) && (sectionses.length == 1)) {
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
+		if (sectionses.length == 1) {
 			return findByG_P_S_L(groupId, parentResourcePrimKey, sectionses[0],
 				latest, start, end, orderByComparator);
 		}
@@ -22809,29 +22397,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_S_L_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
+			query.append(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_2);
 
-			query.append(_FINDER_COLUMN_G_P_S_L_GROUPID_5);
-
-			conjunctionable = true;
-
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_5);
-
-			conjunctionable = true;
-
-			if ((sectionses == null) || (sectionses.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (sectionses.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
 				for (int i = 0; i < sectionses.length; i++) {
@@ -22854,16 +22424,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
-
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_S_L_LATEST_5);
+			query.append(_FINDER_COLUMN_G_P_S_L_LATEST_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -22889,8 +22456,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				qPos.add(parentResourcePrimKey);
 
-				if (sectionses != null) {
-					qPos.add(sectionses);
+				for (String sections : sectionses) {
+					if ((sections != null) && !sections.isEmpty()) {
+						qPos.add(sections);
+					}
 				}
 
 				qPos.add(latest);
@@ -23044,6 +22613,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByG_P_S_L(long groupId, long parentResourcePrimKey,
 		String[] sectionses, boolean latest) throws SystemException {
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		Object[] finderArgs = new Object[] {
 				groupId, parentResourcePrimKey, StringUtil.merge(sectionses),
 				latest
@@ -23057,29 +22634,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_S_L_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
+			query.append(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_2);
 
-			query.append(_FINDER_COLUMN_G_P_S_L_GROUPID_5);
-
-			conjunctionable = true;
-
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_5);
-
-			conjunctionable = true;
-
-			if ((sectionses == null) || (sectionses.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (sectionses.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
 				for (int i = 0; i < sectionses.length; i++) {
@@ -23102,16 +22661,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
-
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_S_L_LATEST_5);
+			query.append(_FINDER_COLUMN_G_P_S_L_LATEST_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -23128,8 +22684,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				qPos.add(parentResourcePrimKey);
 
-				if (sectionses != null) {
-					qPos.add(sectionses);
+				for (String sections : sectionses) {
+					if ((sections != null) && !sections.isEmpty()) {
+						qPos.add(sections);
+					}
 				}
 
 				qPos.add(latest);
@@ -23204,7 +22762,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -23251,33 +22809,23 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				latest);
 		}
 
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_S_L_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
+		query.append(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_2);
 
-		query.append(_FINDER_COLUMN_G_P_S_L_GROUPID_5);
-
-		conjunctionable = true;
-
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_5);
-
-		conjunctionable = true;
-
-		if ((sectionses == null) || (sectionses.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (sectionses.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
 			for (int i = 0; i < sectionses.length; i++) {
@@ -23300,16 +22848,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
-
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_S_L_LATEST_5);
+		query.append(_FINDER_COLUMN_G_P_S_L_LATEST_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -23320,7 +22865,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -23331,8 +22876,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			qPos.add(parentResourcePrimKey);
 
-			if (sectionses != null) {
-				qPos.add(sectionses);
+			for (String sections : sectionses) {
+				if ((sections != null) && !sections.isEmpty()) {
+					qPos.add(sections);
+				}
 			}
 
 			qPos.add(latest);
@@ -23350,12 +22897,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_G_P_S_L_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_S_L_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_L_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_L_PARENTRESOURCEPRIMKEY_2) +
-		")";
 	private static final String _FINDER_COLUMN_G_P_S_L_SECTIONS_1 = "kbArticle.sections LIKE NULL AND ";
 	private static final String _FINDER_COLUMN_G_P_S_L_SECTIONS_2 = "kbArticle.sections LIKE ? AND ";
 	private static final String _FINDER_COLUMN_G_P_S_L_SECTIONS_3 = "(kbArticle.sections IS NULL OR kbArticle.sections LIKE '') AND ";
@@ -23366,8 +22908,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	private static final String _FINDER_COLUMN_G_P_S_L_SECTIONS_6 = "(" +
 		removeConjunction(_FINDER_COLUMN_G_P_S_L_SECTIONS_3) + ")";
 	private static final String _FINDER_COLUMN_G_P_S_L_LATEST_2 = "kbArticle.latest = ?";
-	private static final String _FINDER_COLUMN_G_P_S_L_LATEST_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_L_LATEST_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_P_S_M = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_S_M",
@@ -23467,7 +23007,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			for (KBArticle kbArticle : list) {
 				if ((groupId != kbArticle.getGroupId()) ||
 						(parentResourcePrimKey != kbArticle.getParentResourcePrimKey()) ||
-						!Validator.equals(sections, kbArticle.getSections()) ||
+						!StringUtil.wildcardMatches(kbArticle.getSections(),
+							sections, CharPool.UNDERLINE, CharPool.PERCENT,
+							CharPool.BACK_SLASH, true) ||
 						(main != kbArticle.getMain())) {
 					list = null;
 
@@ -23701,6 +23243,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_P_S_M(groupId, parentResourcePrimKey, sections,
 				main);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<KBArticle> list = findByG_P_S_M(groupId, parentResourcePrimKey,
 				sections, main, count - 1, count, orderByComparator);
@@ -24028,7 +23574,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -24236,7 +23782,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -24347,6 +23893,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				main, start, end, orderByComparator);
 		}
 
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -24356,29 +23910,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_S_M_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
+		query.append(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_2);
 
-		query.append(_FINDER_COLUMN_G_P_S_M_GROUPID_5);
-
-		conjunctionable = true;
-
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_5);
-
-		conjunctionable = true;
-
-		if ((sectionses == null) || (sectionses.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (sectionses.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
 			for (int i = 0; i < sectionses.length; i++) {
@@ -24401,16 +23937,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
-
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_S_M_MAIN_5);
+		query.append(_FINDER_COLUMN_G_P_S_M_MAIN_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -24444,7 +23977,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -24459,8 +23992,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			qPos.add(parentResourcePrimKey);
 
-			if (sectionses != null) {
-				qPos.add(sectionses);
+			for (String sections : sectionses) {
+				if ((sections != null) && !sections.isEmpty()) {
+					qPos.add(sections);
+				}
 			}
 
 			qPos.add(main);
@@ -24543,7 +24078,15 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		long parentResourcePrimKey, String[] sectionses, boolean main,
 		int start, int end, OrderByComparator orderByComparator)
 		throws SystemException {
-		if ((sectionses != null) && (sectionses.length == 1)) {
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
+		if (sectionses.length == 1) {
 			return findByG_P_S_M(groupId, parentResourcePrimKey, sectionses[0],
 				main, start, end, orderByComparator);
 		}
@@ -24589,29 +24132,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_S_M_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
+			query.append(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_2);
 
-			query.append(_FINDER_COLUMN_G_P_S_M_GROUPID_5);
-
-			conjunctionable = true;
-
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_5);
-
-			conjunctionable = true;
-
-			if ((sectionses == null) || (sectionses.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (sectionses.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
 				for (int i = 0; i < sectionses.length; i++) {
@@ -24634,16 +24159,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
-
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_S_M_MAIN_5);
+			query.append(_FINDER_COLUMN_G_P_S_M_MAIN_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -24669,8 +24191,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				qPos.add(parentResourcePrimKey);
 
-				if (sectionses != null) {
-					qPos.add(sectionses);
+				for (String sections : sectionses) {
+					if ((sections != null) && !sections.isEmpty()) {
+						qPos.add(sections);
+					}
 				}
 
 				qPos.add(main);
@@ -24824,6 +24348,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByG_P_S_M(long groupId, long parentResourcePrimKey,
 		String[] sectionses, boolean main) throws SystemException {
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		Object[] finderArgs = new Object[] {
 				groupId, parentResourcePrimKey, StringUtil.merge(sectionses),
 				main
@@ -24837,29 +24369,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_S_M_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
+			query.append(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_2);
 
-			query.append(_FINDER_COLUMN_G_P_S_M_GROUPID_5);
-
-			conjunctionable = true;
-
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_5);
-
-			conjunctionable = true;
-
-			if ((sectionses == null) || (sectionses.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (sectionses.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
 				for (int i = 0; i < sectionses.length; i++) {
@@ -24882,16 +24396,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
-
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_S_M_MAIN_5);
+			query.append(_FINDER_COLUMN_G_P_S_M_MAIN_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -24908,8 +24419,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				qPos.add(parentResourcePrimKey);
 
-				if (sectionses != null) {
-					qPos.add(sectionses);
+				for (String sections : sectionses) {
+					if ((sections != null) && !sections.isEmpty()) {
+						qPos.add(sections);
+					}
 				}
 
 				qPos.add(main);
@@ -24983,7 +24496,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -25030,33 +24543,23 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				main);
 		}
 
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_S_M_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
+		query.append(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_2);
 
-		query.append(_FINDER_COLUMN_G_P_S_M_GROUPID_5);
-
-		conjunctionable = true;
-
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_5);
-
-		conjunctionable = true;
-
-		if ((sectionses == null) || (sectionses.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (sectionses.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
 			for (int i = 0; i < sectionses.length; i++) {
@@ -25079,16 +24582,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
-
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_S_M_MAIN_5);
+		query.append(_FINDER_COLUMN_G_P_S_M_MAIN_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -25099,7 +24599,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -25110,8 +24610,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			qPos.add(parentResourcePrimKey);
 
-			if (sectionses != null) {
-				qPos.add(sectionses);
+			for (String sections : sectionses) {
+				if ((sections != null) && !sections.isEmpty()) {
+					qPos.add(sections);
+				}
 			}
 
 			qPos.add(main);
@@ -25129,12 +24631,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_G_P_S_M_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_S_M_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_M_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_M_PARENTRESOURCEPRIMKEY_2) +
-		")";
 	private static final String _FINDER_COLUMN_G_P_S_M_SECTIONS_1 = "kbArticle.sections LIKE NULL AND ";
 	private static final String _FINDER_COLUMN_G_P_S_M_SECTIONS_2 = "kbArticle.sections LIKE ? AND ";
 	private static final String _FINDER_COLUMN_G_P_S_M_SECTIONS_3 = "(kbArticle.sections IS NULL OR kbArticle.sections LIKE '') AND ";
@@ -25145,8 +24642,6 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	private static final String _FINDER_COLUMN_G_P_S_M_SECTIONS_6 = "(" +
 		removeConjunction(_FINDER_COLUMN_G_P_S_M_SECTIONS_3) + ")";
 	private static final String _FINDER_COLUMN_G_P_S_M_MAIN_2 = "kbArticle.main = ?";
-	private static final String _FINDER_COLUMN_G_P_S_M_MAIN_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_M_MAIN_2) + ")";
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_G_P_S_S = new FinderPath(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
 			KBArticleModelImpl.FINDER_CACHE_ENABLED, KBArticleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_S_S",
@@ -25246,7 +24741,9 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			for (KBArticle kbArticle : list) {
 				if ((groupId != kbArticle.getGroupId()) ||
 						(parentResourcePrimKey != kbArticle.getParentResourcePrimKey()) ||
-						!Validator.equals(sections, kbArticle.getSections()) ||
+						!StringUtil.wildcardMatches(kbArticle.getSections(),
+							sections, CharPool.UNDERLINE, CharPool.PERCENT,
+							CharPool.BACK_SLASH, true) ||
 						(status != kbArticle.getStatus())) {
 					list = null;
 
@@ -25480,6 +24977,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_P_S_S(groupId, parentResourcePrimKey, sections,
 				status);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<KBArticle> list = findByG_P_S_S(groupId, parentResourcePrimKey,
 				sections, status, count - 1, count, orderByComparator);
@@ -25807,7 +25308,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -26015,7 +25516,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				KBArticle.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -26125,6 +25626,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				status, start, end, orderByComparator);
 		}
 
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		StringBundler query = new StringBundler();
 
 		if (getDB().isSupportsInlineDistinct()) {
@@ -26134,29 +25643,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_1);
 		}
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_S_S_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
+		query.append(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_2);
 
-		query.append(_FINDER_COLUMN_G_P_S_S_GROUPID_5);
-
-		conjunctionable = true;
-
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_5);
-
-		conjunctionable = true;
-
-		if ((sectionses == null) || (sectionses.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (sectionses.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
 			for (int i = 0; i < sectionses.length; i++) {
@@ -26179,16 +25670,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
-
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_S_S_STATUS_5);
+		query.append(_FINDER_COLUMN_G_P_S_S_STATUS_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		if (!getDB().isSupportsInlineDistinct()) {
 			query.append(_FILTER_SQL_SELECT_KBARTICLE_NO_INLINE_DISTINCT_WHERE_2);
@@ -26222,7 +25710,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, KBArticleImpl.class);
@@ -26237,8 +25725,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			qPos.add(parentResourcePrimKey);
 
-			if (sectionses != null) {
-				qPos.add(sectionses);
+			for (String sections : sectionses) {
+				if ((sections != null) && !sections.isEmpty()) {
+					qPos.add(sections);
+				}
 			}
 
 			qPos.add(status);
@@ -26320,7 +25810,15 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	public List<KBArticle> findByG_P_S_S(long groupId,
 		long parentResourcePrimKey, String[] sectionses, int status, int start,
 		int end, OrderByComparator orderByComparator) throws SystemException {
-		if ((sectionses != null) && (sectionses.length == 1)) {
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
+		if (sectionses.length == 1) {
 			return findByG_P_S_S(groupId, parentResourcePrimKey, sectionses[0],
 				status, start, end, orderByComparator);
 		}
@@ -26366,29 +25864,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_SELECT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_S_S_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
+			query.append(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_2);
 
-			query.append(_FINDER_COLUMN_G_P_S_S_GROUPID_5);
-
-			conjunctionable = true;
-
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_5);
-
-			conjunctionable = true;
-
-			if ((sectionses == null) || (sectionses.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (sectionses.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
 				for (int i = 0; i < sectionses.length; i++) {
@@ -26411,16 +25891,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
-
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_S_S_STATUS_5);
+			query.append(_FINDER_COLUMN_G_P_S_S_STATUS_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
@@ -26446,8 +25923,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				qPos.add(parentResourcePrimKey);
 
-				if (sectionses != null) {
-					qPos.add(sectionses);
+				for (String sections : sectionses) {
+					if ((sections != null) && !sections.isEmpty()) {
+						qPos.add(sections);
+					}
 				}
 
 				qPos.add(status);
@@ -26601,6 +26080,14 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	@Override
 	public int countByG_P_S_S(long groupId, long parentResourcePrimKey,
 		String[] sectionses, int status) throws SystemException {
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		Object[] finderArgs = new Object[] {
 				groupId, parentResourcePrimKey, StringUtil.merge(sectionses),
 				status
@@ -26614,29 +26101,11 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(_SQL_COUNT_KBARTICLE_WHERE);
 
-			boolean conjunctionable = false;
+			query.append(_FINDER_COLUMN_G_P_S_S_GROUPID_2);
 
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
+			query.append(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_2);
 
-			query.append(_FINDER_COLUMN_G_P_S_S_GROUPID_5);
-
-			conjunctionable = true;
-
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
-			query.append(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_5);
-
-			conjunctionable = true;
-
-			if ((sectionses == null) || (sectionses.length > 0)) {
-				if (conjunctionable) {
-					query.append(WHERE_AND);
-				}
-
+			if (sectionses.length > 0) {
 				query.append(StringPool.OPEN_PARENTHESIS);
 
 				for (int i = 0; i < sectionses.length; i++) {
@@ -26659,16 +26128,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				query.append(StringPool.CLOSE_PARENTHESIS);
 
-				conjunctionable = true;
-			}
-
-			if (conjunctionable) {
 				query.append(WHERE_AND);
 			}
 
-			query.append(_FINDER_COLUMN_G_P_S_S_STATUS_5);
+			query.append(_FINDER_COLUMN_G_P_S_S_STATUS_2);
 
-			conjunctionable = true;
+			query.setStringAt(removeConjunction(query.stringAt(query.index() -
+						1)), query.index() - 1);
 
 			String sql = query.toString();
 
@@ -26685,8 +26151,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 				qPos.add(parentResourcePrimKey);
 
-				if (sectionses != null) {
-					qPos.add(sectionses);
+				for (String sections : sectionses) {
+					if ((sections != null) && !sections.isEmpty()) {
+						qPos.add(sections);
+					}
 				}
 
 				qPos.add(status);
@@ -26761,7 +26229,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -26808,33 +26276,23 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 				status);
 		}
 
+		if (sectionses == null) {
+			sectionses = new String[0];
+		}
+		else {
+			sectionses = ArrayUtil.distinct(sectionses,
+					NULL_SAFE_STRING_COMPARATOR);
+		}
+
 		StringBundler query = new StringBundler();
 
 		query.append(_FILTER_SQL_COUNT_KBARTICLE_WHERE);
 
-		boolean conjunctionable = false;
+		query.append(_FINDER_COLUMN_G_P_S_S_GROUPID_2);
 
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
+		query.append(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_2);
 
-		query.append(_FINDER_COLUMN_G_P_S_S_GROUPID_5);
-
-		conjunctionable = true;
-
-		if (conjunctionable) {
-			query.append(WHERE_AND);
-		}
-
-		query.append(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_5);
-
-		conjunctionable = true;
-
-		if ((sectionses == null) || (sectionses.length > 0)) {
-			if (conjunctionable) {
-				query.append(WHERE_AND);
-			}
-
+		if (sectionses.length > 0) {
 			query.append(StringPool.OPEN_PARENTHESIS);
 
 			for (int i = 0; i < sectionses.length; i++) {
@@ -26857,16 +26315,13 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			query.append(StringPool.CLOSE_PARENTHESIS);
 
-			conjunctionable = true;
-		}
-
-		if (conjunctionable) {
 			query.append(WHERE_AND);
 		}
 
-		query.append(_FINDER_COLUMN_G_P_S_S_STATUS_5);
+		query.append(_FINDER_COLUMN_G_P_S_S_STATUS_2);
 
-		conjunctionable = true;
+		query.setStringAt(removeConjunction(query.stringAt(query.index() - 1)),
+			query.index() - 1);
 
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				KBArticle.class.getName(),
@@ -26877,7 +26332,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -26888,8 +26343,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 
 			qPos.add(parentResourcePrimKey);
 
-			if (sectionses != null) {
-				qPos.add(sectionses);
+			for (String sections : sectionses) {
+				if ((sections != null) && !sections.isEmpty()) {
+					qPos.add(sections);
+				}
 			}
 
 			qPos.add(status);
@@ -26907,12 +26364,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	}
 
 	private static final String _FINDER_COLUMN_G_P_S_S_GROUPID_2 = "kbArticle.groupId = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_S_S_GROUPID_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_S_GROUPID_2) + ")";
 	private static final String _FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_2 = "kbArticle.parentResourcePrimKey = ? AND ";
-	private static final String _FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_S_PARENTRESOURCEPRIMKEY_2) +
-		")";
 	private static final String _FINDER_COLUMN_G_P_S_S_SECTIONS_1 = "kbArticle.sections LIKE NULL AND ";
 	private static final String _FINDER_COLUMN_G_P_S_S_SECTIONS_2 = "kbArticle.sections LIKE ? AND ";
 	private static final String _FINDER_COLUMN_G_P_S_S_SECTIONS_3 = "(kbArticle.sections IS NULL OR kbArticle.sections LIKE '') AND ";
@@ -26923,8 +26375,10 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 	private static final String _FINDER_COLUMN_G_P_S_S_SECTIONS_6 = "(" +
 		removeConjunction(_FINDER_COLUMN_G_P_S_S_SECTIONS_3) + ")";
 	private static final String _FINDER_COLUMN_G_P_S_S_STATUS_2 = "kbArticle.status = ?";
-	private static final String _FINDER_COLUMN_G_P_S_S_STATUS_5 = "(" +
-		removeConjunction(_FINDER_COLUMN_G_P_S_S_STATUS_2) + ")";
+
+	public KBArticlePersistenceImpl() {
+		setModelClass(KBArticle.class);
+	}
 
 	/**
 	 * Caches the k b article in the entity cache if it is enabled.
@@ -26979,7 +26433,7 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 			CacheRegistryUtil.clear(KBArticleImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(KBArticleImpl.class.getName());
+		EntityCacheUtil.clearCache(KBArticleImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -27725,10 +27179,12 @@ public class KBArticlePersistenceImpl extends BasePersistenceImpl<KBArticle>
 		}
 
 		EntityCacheUtil.putResult(KBArticleModelImpl.ENTITY_CACHE_ENABLED,
-			KBArticleImpl.class, kbArticle.getPrimaryKey(), kbArticle);
+			KBArticleImpl.class, kbArticle.getPrimaryKey(), kbArticle, false);
 
 		clearUniqueFindersCache(kbArticle);
 		cacheUniqueFindersCache(kbArticle);
+
+		kbArticle.resetOriginalValues();
 
 		return kbArticle;
 	}

@@ -206,6 +206,9 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		attributes.put("field4", getField4());
 		attributes.put("field5", getField5());
 
+		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
+		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
+
 		return attributes;
 	}
 
@@ -290,8 +293,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		}
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getUuid() {
 		if (_uuid == null) {
 			return StringPool.BLANK;
@@ -314,8 +317,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		return GetterUtil.getString(_originalUuid);
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getFooId() {
 		return _fooId;
 	}
@@ -325,8 +328,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		_fooId = fooId;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getGroupId() {
 		return _groupId;
 	}
@@ -348,8 +351,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		return _originalGroupId;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getCompanyId() {
 		return _companyId;
 	}
@@ -371,8 +374,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		return _originalCompanyId;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public long getUserId() {
 		return _userId;
 	}
@@ -392,8 +395,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		_userUuid = userUuid;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getUserName() {
 		if (_userName == null) {
 			return StringPool.BLANK;
@@ -408,8 +411,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		_userName = userName;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public Date getCreateDate() {
 		return _createDate;
 	}
@@ -419,8 +422,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		_createDate = createDate;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public Date getModifiedDate() {
 		return _modifiedDate;
 	}
@@ -430,8 +433,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		_modifiedDate = modifiedDate;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getField1() {
 		if (_field1 == null) {
 			return StringPool.BLANK;
@@ -448,8 +451,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		_field1 = field1;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public boolean getField2() {
 		return _field2;
 	}
@@ -476,8 +479,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		return _originalField2;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public int getField3() {
 		return _field3;
 	}
@@ -487,8 +490,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		_field3 = field3;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public Date getField4() {
 		return _field4;
 	}
@@ -498,8 +501,8 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 		_field4 = field4;
 	}
 
-	@Override
 	@JSON
+	@Override
 	public String getField5() {
 		if (_field5 == null) {
 			return StringPool.BLANK;
@@ -608,6 +611,16 @@ public class FooModelImpl extends BaseModelImpl<Foo> implements FooModel {
 	@Override
 	public int hashCode() {
 		return (int)getPrimaryKey();
+	}
+
+	@Override
+	public boolean isEntityCacheEnabled() {
+		return ENTITY_CACHE_ENABLED;
+	}
+
+	@Override
+	public boolean isFinderCacheEnabled() {
+		return FINDER_CACHE_ENABLED;
 	}
 
 	@Override

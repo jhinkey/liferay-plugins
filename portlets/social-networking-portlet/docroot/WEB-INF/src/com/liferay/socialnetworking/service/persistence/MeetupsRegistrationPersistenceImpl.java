@@ -357,6 +357,10 @@ public class MeetupsRegistrationPersistenceImpl extends BasePersistenceImpl<Meet
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByMeetupsEntryId(meetupsEntryId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<MeetupsRegistration> list = findByMeetupsEntryId(meetupsEntryId,
 				count - 1, count, orderByComparator);
 
@@ -1119,6 +1123,10 @@ public class MeetupsRegistrationPersistenceImpl extends BasePersistenceImpl<Meet
 		throws SystemException {
 		int count = countByME_S(meetupsEntryId, status);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<MeetupsRegistration> list = findByME_S(meetupsEntryId, status,
 				count - 1, count, orderByComparator);
 
@@ -1360,6 +1368,10 @@ public class MeetupsRegistrationPersistenceImpl extends BasePersistenceImpl<Meet
 	private static final String _FINDER_COLUMN_ME_S_MEETUPSENTRYID_2 = "meetupsRegistration.meetupsEntryId = ? AND ";
 	private static final String _FINDER_COLUMN_ME_S_STATUS_2 = "meetupsRegistration.status = ?";
 
+	public MeetupsRegistrationPersistenceImpl() {
+		setModelClass(MeetupsRegistration.class);
+	}
+
 	/**
 	 * Caches the meetups registration in the entity cache if it is enabled.
 	 *
@@ -1413,7 +1425,7 @@ public class MeetupsRegistrationPersistenceImpl extends BasePersistenceImpl<Meet
 			CacheRegistryUtil.clear(MeetupsRegistrationImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(MeetupsRegistrationImpl.class.getName());
+		EntityCacheUtil.clearCache(MeetupsRegistrationImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1694,10 +1706,12 @@ public class MeetupsRegistrationPersistenceImpl extends BasePersistenceImpl<Meet
 
 		EntityCacheUtil.putResult(MeetupsRegistrationModelImpl.ENTITY_CACHE_ENABLED,
 			MeetupsRegistrationImpl.class, meetupsRegistration.getPrimaryKey(),
-			meetupsRegistration);
+			meetupsRegistration, false);
 
 		clearUniqueFindersCache(meetupsRegistration);
 		cacheUniqueFindersCache(meetupsRegistration);
+
+		meetupsRegistration.resetOriginalValues();
 
 		return meetupsRegistration;
 	}

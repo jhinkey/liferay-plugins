@@ -61,7 +61,7 @@ public class UserThreadUtil {
 	/**
 	 * @see com.liferay.portal.service.persistence.BasePersistence#countWithDynamicQuery(DynamicQuery)
 	 */
-	public long countWithDynamicQuery(DynamicQuery dynamicQuery)
+	public static long countWithDynamicQuery(DynamicQuery dynamicQuery)
 		throws SystemException {
 		return getPersistence().countWithDynamicQuery(dynamicQuery);
 	}
@@ -1034,6 +1034,7 @@ public class UserThreadUtil {
 	/**
 	 * @deprecated As of 6.2.0
 	 */
+	@Deprecated
 	public void setPersistence(UserThreadPersistence persistence) {
 	}
 

@@ -24,7 +24,7 @@
 			</div>
 
 			<div class="receive-notification">
-				<span><liferay-ui:message key="receive-notification-when" /></span>
+				<span><liferay-ui:message key="receive-a-notification-when-someone" /></span>
 			</div>
 		</div>
 
@@ -58,7 +58,7 @@
 						for (Map.Entry<Integer, UserNotificationDeliveryType> userNotificationDeliveryTypeEntry : userNotificationDeliveryTypesMap.entrySet()) {
 							UserNotificationDeliveryType userNotificationDeliveryType = userNotificationDeliveryTypeEntry.getValue();
 
-							UserNotificationDelivery userNotificationDelivery = UserNotificationDeliveryLocalServiceUtil.fetchUserNotificationDelivery(themeDisplay.getUserId(), portletId, userNotificationDefinition.getClassNameId(), userNotificationDefinition.getNotificationType(), userNotificationDeliveryType.getType());
+							UserNotificationDelivery userNotificationDelivery = UserNotificationDeliveryLocalServiceUtil.getUserNotificationDelivery(themeDisplay.getUserId(), portletId, userNotificationDefinition.getClassNameId(), userNotificationDefinition.getNotificationType(), userNotificationDeliveryType.getType(), userNotificationDeliveryType.isDefault());
 						%>
 
 							<td class="span1">
@@ -88,7 +88,7 @@
 <aui:script use="aui-base,aui-io-request">
 	var userNotifications = A.one('#portlet_<%= PortletKeys.NOTIFICATIONS %>');
 
-	var notificationDelivery = userNotifications.one('.manage-notifications .notification-deliveries');
+	var notificationDelivery = userNotifications.one('.manage-notifications');
 
 	if (notificationDelivery) {
 		notificationDelivery.delegate(
@@ -108,7 +108,7 @@
 					}
 				);
 			},
-			'.notification-delivery'
+			'.notification-deliveries .notification-delivery'
 		);
 	}
 </aui:script>

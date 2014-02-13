@@ -24,12 +24,8 @@ String keywords = ParamUtil.getString(request, "keywords");
 	title="categories"
 />
 
-<aui:form action="<%= portletURL %>" method="post" name="fm1">
-	<aui:field-wrapper cssClass="form-search">
-		<aui:input id="keywords" inlineField="<%= true %>" label="" name="keywords" size="30" type="text" />
-
-		<aui:button type="submit" value="search" />
-	</aui:field-wrapper>
+<aui:form action="<%= portletURL %>" cssClass="form-search" method="post" name="fm1">
+	<liferay-ui:input-search placeholder='<%= LanguageUtil.get(locale, "keywords") %>' title='<%= LanguageUtil.get(locale, "keywords") %>' />
 </aui:form>
 
 <liferay-ui:search-container
@@ -140,7 +136,7 @@ private String _getSubscribers(PageContext pageContext, MBCategory mbCategory) t
 	sb.append("<a href=\"");
 	sb.append(HtmlUtil.escape(portletURL.toString()));
 	sb.append("\">");
-	sb.append(LanguageUtil.format(pageContext, "and-x-more", String.valueOf(count)));
+	sb.append(LanguageUtil.format(pageContext, "and-x-more", String.valueOf(count), false));
 	sb.append("</a>");
 
 	return sb.toString();

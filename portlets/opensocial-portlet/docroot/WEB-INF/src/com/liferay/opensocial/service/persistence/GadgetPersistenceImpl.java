@@ -360,6 +360,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUuid(uuid);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Gadget> list = findByUuid(uuid, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -642,7 +646,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, GadgetImpl.class);
@@ -829,7 +833,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -985,7 +989,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -1313,6 +1317,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUuid_C(uuid, companyId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Gadget> list = findByUuid_C(uuid, companyId, count - 1, count,
 				orderByComparator);
 
@@ -1610,7 +1618,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, GadgetImpl.class);
@@ -1803,7 +1811,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -1973,7 +1981,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -2267,6 +2275,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByCompanyId(companyId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Gadget> list = findByCompanyId(companyId, count - 1, count,
 				orderByComparator);
 
@@ -2526,7 +2538,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, GadgetImpl.class);
@@ -2700,7 +2712,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
 				Gadget.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -2828,7 +2840,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -3113,6 +3125,10 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 	private static final String _FINDER_COLUMN_C_U_URL_2 = "gadget.url = ?";
 	private static final String _FINDER_COLUMN_C_U_URL_3 = "(gadget.url IS NULL OR gadget.url = '')";
 
+	public GadgetPersistenceImpl() {
+		setModelClass(Gadget.class);
+	}
+
 	/**
 	 * Caches the gadget in the entity cache if it is enabled.
 	 *
@@ -3161,7 +3177,7 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 			CacheRegistryUtil.clear(GadgetImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(GadgetImpl.class.getName());
+		EntityCacheUtil.clearCache(GadgetImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -3449,10 +3465,12 @@ public class GadgetPersistenceImpl extends BasePersistenceImpl<Gadget>
 		}
 
 		EntityCacheUtil.putResult(GadgetModelImpl.ENTITY_CACHE_ENABLED,
-			GadgetImpl.class, gadget.getPrimaryKey(), gadget);
+			GadgetImpl.class, gadget.getPrimaryKey(), gadget, false);
 
 		clearUniqueFindersCache(gadget);
 		cacheUniqueFindersCache(gadget);
+
+		gadget.resetOriginalValues();
 
 		return gadget;
 	}

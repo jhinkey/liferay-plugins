@@ -356,6 +356,10 @@ public class FeedPersistenceImpl extends BasePersistenceImpl<Feed>
 	private static final String _FINDER_COLUMN_U_TSN_TWITTERSCREENNAME_2 = "feed.twitterScreenName = ?";
 	private static final String _FINDER_COLUMN_U_TSN_TWITTERSCREENNAME_3 = "(feed.twitterScreenName IS NULL OR feed.twitterScreenName = '')";
 
+	public FeedPersistenceImpl() {
+		setModelClass(Feed.class);
+	}
+
 	/**
 	 * Caches the feed in the entity cache if it is enabled.
 	 *
@@ -403,7 +407,7 @@ public class FeedPersistenceImpl extends BasePersistenceImpl<Feed>
 			CacheRegistryUtil.clear(FeedImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(FeedImpl.class.getName());
+		EntityCacheUtil.clearCache(FeedImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -624,10 +628,12 @@ public class FeedPersistenceImpl extends BasePersistenceImpl<Feed>
 		}
 
 		EntityCacheUtil.putResult(FeedModelImpl.ENTITY_CACHE_ENABLED,
-			FeedImpl.class, feed.getPrimaryKey(), feed);
+			FeedImpl.class, feed.getPrimaryKey(), feed, false);
 
 		clearUniqueFindersCache(feed);
 		cacheUniqueFindersCache(feed);
+
+		feed.resetOriginalValues();
 
 		return feed;
 	}

@@ -334,6 +334,10 @@ public class SVNRepositoryPersistenceImpl extends BasePersistenceImpl<SVNReposit
 	private static final String _FINDER_COLUMN_URL_URL_2 = "svnRepository.url = ?";
 	private static final String _FINDER_COLUMN_URL_URL_3 = "(svnRepository.url IS NULL OR svnRepository.url = '')";
 
+	public SVNRepositoryPersistenceImpl() {
+		setModelClass(SVNRepository.class);
+	}
+
 	/**
 	 * Caches the s v n repository in the entity cache if it is enabled.
 	 *
@@ -383,7 +387,7 @@ public class SVNRepositoryPersistenceImpl extends BasePersistenceImpl<SVNReposit
 			CacheRegistryUtil.clear(SVNRepositoryImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(SVNRepositoryImpl.class.getName());
+		EntityCacheUtil.clearCache(SVNRepositoryImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -603,10 +607,12 @@ public class SVNRepositoryPersistenceImpl extends BasePersistenceImpl<SVNReposit
 
 		EntityCacheUtil.putResult(SVNRepositoryModelImpl.ENTITY_CACHE_ENABLED,
 			SVNRepositoryImpl.class, svnRepository.getPrimaryKey(),
-			svnRepository);
+			svnRepository, false);
 
 		clearUniqueFindersCache(svnRepository);
 		cacheUniqueFindersCache(svnRepository);
+
+		svnRepository.resetOriginalValues();
 
 		return svnRepository;
 	}

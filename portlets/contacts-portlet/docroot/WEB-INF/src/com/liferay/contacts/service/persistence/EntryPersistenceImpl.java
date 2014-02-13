@@ -342,6 +342,10 @@ public class EntryPersistenceImpl extends BasePersistenceImpl<Entry>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUserId(userId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Entry> list = findByUserId(userId, count - 1, count,
 				orderByComparator);
 
@@ -836,6 +840,10 @@ public class EntryPersistenceImpl extends BasePersistenceImpl<Entry>
 	private static final String _FINDER_COLUMN_U_EA_EMAILADDRESS_2 = "entry.emailAddress = ?";
 	private static final String _FINDER_COLUMN_U_EA_EMAILADDRESS_3 = "(entry.emailAddress IS NULL OR entry.emailAddress = '')";
 
+	public EntryPersistenceImpl() {
+		setModelClass(Entry.class);
+	}
+
 	/**
 	 * Caches the entry in the entity cache if it is enabled.
 	 *
@@ -883,7 +891,7 @@ public class EntryPersistenceImpl extends BasePersistenceImpl<Entry>
 			CacheRegistryUtil.clear(EntryImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(EntryImpl.class.getName());
+		EntityCacheUtil.clearCache(EntryImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1123,10 +1131,12 @@ public class EntryPersistenceImpl extends BasePersistenceImpl<Entry>
 		}
 
 		EntityCacheUtil.putResult(EntryModelImpl.ENTITY_CACHE_ENABLED,
-			EntryImpl.class, entry.getPrimaryKey(), entry);
+			EntryImpl.class, entry.getPrimaryKey(), entry, false);
 
 		clearUniqueFindersCache(entry);
 		cacheUniqueFindersCache(entry);
+
+		entry.resetOriginalValues();
 
 		return entry;
 	}

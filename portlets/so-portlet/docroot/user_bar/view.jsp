@@ -43,7 +43,7 @@ catch (NoSuchRoleException nsre) {
 	</liferay-util:html-top>
 
 	<liferay-util:body-top>
-		<div class="so-portlet-user-bar" id="<portlet:namespace/>userBar">
+		<div class="so-portlet-user-bar" id="<portlet:namespace />userBar">
 
 			<%
 			Group group = user.getGroup();
@@ -60,7 +60,7 @@ catch (NoSuchRoleException nsre) {
 			</a>
 
 			<nav>
-				<ul class="dashboard-nav" id="<portlet:namespace/>dashboardNav">
+				<ul class="dashboard-nav" id="<portlet:namespace />dashboardNav">
 
 					<%
 					List<Layout> mylayouts = LayoutLocalServiceUtil.getLayouts(group.getGroupId(), true);
@@ -87,24 +87,78 @@ catch (NoSuchRoleException nsre) {
 			</nav>
 		</div>
 	</liferay-util:body-top>
+</c:if>
 
-	<aui:script use="aui-base,liferay-so-user-menu">
-		var html = A.one('html');
+<aui:script>
+	function <portlet:namespace />openWindow() {
+		<liferay-portlet:renderURL portletName="<%= PortletKeys.SO_SITES %>" var="viewSitesURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+			<portlet:param name="mvcPath" value="/sites/view_sites.jsp" />
+		</liferay-portlet:renderURL>
 
-		html.on(
+		Liferay.Util.openWindow(
+			{
+				dialog: {
+					align: {
+						node: null,
+						points: ['tc', 'tc']
+					},
+					constrain2view: true,
+					cssClass: 'so-portlet-sites-dialog',
+					modal: true,
+					resizable: false,
+					width: 650
+				},
+				title: '<%= UnicodeLanguageUtil.get(pageContext, "sites-directory") %>',
+				uri: '<%= viewSitesURL %>'
+			}
+		);
+	}
+</aui:script>
+
+<aui:script use="aui-base">
+	if (!('placeholder' in document.createElement('input'))) {
+		var searchInput = A.one('#<%= PortalUtil.getPortletNamespace(PortletKeys.SO_SITES) %>name')
+
+		if (searchInput) {
+			var placeholder = searchInput.getAttribute('placeholder');
+
+			searchInput.val(placeholder);
+
+			searchInput.on(
+				'click',
+				function(event) {
+					if (searchInput.val() == placeholder) {
+						searchInput.val('');
+					}
+				}
+			);
+
+			searchInput.on(
+				'blur',
+				function(event) {
+					if (!searchInput.val()) {
+						searchInput.val(placeholder);
+					}
+				}
+			);
+		}
+	}
+
+	var mySites = A.one('.portlet-dockbar .my-sites');
+
+	if (mySites) {
+		mySites.delegate(
 			'click',
 			function(event) {
-				A.fire('close-menus');
-			}
-		);
+				var sitesDirectory = mySites.one('.sites-directory');
 
-		new Liferay.SO.UserMenu(
-			{
-				node: '.portlet-dockbar .go-to',
-				showClass: 'search-focus',
-				showOn: 'focus',
-				trigger: '.portlet-dockbar .go-to .so-portlet-sites .search-input'
-			}
+				if (!sitesDirectory) {
+					var mySitesMenu = mySites.one('.my-sites-menu');
+
+					mySitesMenu.insert('<li class="sites-directory last"><a href="javascript:;" onclick="<portlet:namespace />openWindow()"><i class="icon-reorder"></i><span class="site-name"> ' + Liferay.Language.get('sites-directory') + '</span></a></li>')
+				}
+			},
+			'.dropdown-toggle'
 		);
-	</aui:script>
-</c:if>
+	}
+</aui:script>

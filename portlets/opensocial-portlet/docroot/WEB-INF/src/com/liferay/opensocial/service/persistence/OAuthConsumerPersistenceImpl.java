@@ -365,6 +365,10 @@ public class OAuthConsumerPersistenceImpl extends BasePersistenceImpl<OAuthConsu
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByGadgetKey(gadgetKey);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<OAuthConsumer> list = findByGadgetKey(gadgetKey, count - 1, count,
 				orderByComparator);
 
@@ -922,6 +926,10 @@ public class OAuthConsumerPersistenceImpl extends BasePersistenceImpl<OAuthConsu
 	private static final String _FINDER_COLUMN_G_S_SERVICENAME_2 = "oAuthConsumer.serviceName = ?";
 	private static final String _FINDER_COLUMN_G_S_SERVICENAME_3 = "(oAuthConsumer.serviceName IS NULL OR oAuthConsumer.serviceName = '')";
 
+	public OAuthConsumerPersistenceImpl() {
+		setModelClass(OAuthConsumer.class);
+	}
+
 	/**
 	 * Caches the o auth consumer in the entity cache if it is enabled.
 	 *
@@ -973,7 +981,7 @@ public class OAuthConsumerPersistenceImpl extends BasePersistenceImpl<OAuthConsu
 			CacheRegistryUtil.clear(OAuthConsumerImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(OAuthConsumerImpl.class.getName());
+		EntityCacheUtil.clearCache(OAuthConsumerImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1226,10 +1234,12 @@ public class OAuthConsumerPersistenceImpl extends BasePersistenceImpl<OAuthConsu
 
 		EntityCacheUtil.putResult(OAuthConsumerModelImpl.ENTITY_CACHE_ENABLED,
 			OAuthConsumerImpl.class, oAuthConsumer.getPrimaryKey(),
-			oAuthConsumer);
+			oAuthConsumer, false);
 
 		clearUniqueFindersCache(oAuthConsumer);
 		cacheUniqueFindersCache(oAuthConsumer);
+
+		oAuthConsumer.resetOriginalValues();
 
 		return oAuthConsumer;
 	}

@@ -188,7 +188,9 @@ public class CalendarPortlet extends MVCPortlet {
 			getCalendarResource(renderRequest);
 		}
 		catch (Exception e) {
-			if (e instanceof NoSuchResourceException) {
+			if (e instanceof NoSuchResourceException ||
+				e instanceof PrincipalException) {
+
 				SessionErrors.add(renderRequest, e.getClass());
 			}
 			else {
@@ -316,6 +318,8 @@ public class CalendarPortlet extends MVCPortlet {
 
 		CalendarBooking calendarBooking = null;
 
+		String redirect = getRedirect(actionRequest, actionResponse);
+
 		if (calendarBookingId <= 0) {
 			calendarBooking = CalendarBookingServiceUtil.addCalendarBooking(
 				calendarId, childCalendarIds,
@@ -325,6 +329,10 @@ public class CalendarPortlet extends MVCPortlet {
 				endTimeJCalendar.getTimeInMillis(), allDay, recurrence,
 				reminders[0], remindersType[0], reminders[1], remindersType[1],
 				serviceContext);
+
+			redirect = HttpUtil.setParameter(
+				redirect, actionResponse.getNamespace() + "calendarBookingId",
+				calendarBooking.getCalendarBookingId());
 		}
 		else {
 			boolean updateCalendarBookingInstance = ParamUtil.getBoolean(
@@ -366,6 +374,7 @@ public class CalendarPortlet extends MVCPortlet {
 		}
 
 		actionRequest.setAttribute(WebKeys.CALENDAR_BOOKING, calendarBooking);
+		actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 	}
 
 	public void updateCalendarNotificationTemplate(
@@ -518,6 +527,23 @@ public class CalendarPortlet extends MVCPortlet {
 		MBMessageServiceUtil.deleteDiscussionMessage(
 			groupId, className, classPK, permissionClassName, permissionClassPK,
 			permissionOwnerId, messageId);
+	}
+
+	@Override
+	protected void doDispatch(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws IOException, PortletException {
+
+		if (SessionErrors.contains(
+				renderRequest, NoSuchResourceException.class.getName()) ||
+			SessionErrors.contains(
+				renderRequest, PrincipalException.class.getName())) {
+
+			include("/error.jsp", renderRequest, renderResponse);
+		}
+		else {
+			super.doDispatch(renderRequest, renderResponse);
+		}
 	}
 
 	protected void getCalendar(PortletRequest portletRequest) throws Exception {

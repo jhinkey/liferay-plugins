@@ -81,6 +81,10 @@ public class TypePersistenceImpl extends BasePersistenceImpl<Type>
 			TypeModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll", new String[0]);
 
+	public TypePersistenceImpl() {
+		setModelClass(Type.class);
+	}
+
 	/**
 	 * Caches the type in the entity cache if it is enabled.
 	 *
@@ -125,7 +129,7 @@ public class TypePersistenceImpl extends BasePersistenceImpl<Type>
 			CacheRegistryUtil.clear(TypeImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(TypeImpl.class.getName());
+		EntityCacheUtil.clearCache(TypeImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -294,7 +298,9 @@ public class TypePersistenceImpl extends BasePersistenceImpl<Type>
 		}
 
 		EntityCacheUtil.putResult(TypeModelImpl.ENTITY_CACHE_ENABLED,
-			TypeImpl.class, type.getPrimaryKey(), type);
+			TypeImpl.class, type.getPrimaryKey(), type, false);
+
+		type.resetOriginalValues();
 
 		return type;
 	}

@@ -355,6 +355,10 @@ public class FooPersistenceImpl extends BasePersistenceImpl<Foo>
 		throws SystemException {
 		int count = countByUuid(uuid);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Foo> list = findByUuid(uuid, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -1166,6 +1170,10 @@ public class FooPersistenceImpl extends BasePersistenceImpl<Foo>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUuid_C(uuid, companyId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Foo> list = findByUuid_C(uuid, companyId, count - 1, count,
 				orderByComparator);
 
@@ -1692,6 +1700,10 @@ public class FooPersistenceImpl extends BasePersistenceImpl<Foo>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByField2(field2);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Foo> list = findByField2(field2, count - 1, count,
 				orderByComparator);
 
@@ -1916,6 +1928,10 @@ public class FooPersistenceImpl extends BasePersistenceImpl<Foo>
 
 	private static final String _FINDER_COLUMN_FIELD2_FIELD2_2 = "foo.field2 = ?";
 
+	public FooPersistenceImpl() {
+		setModelClass(Foo.class);
+	}
+
 	/**
 	 * Caches the foo in the entity cache if it is enabled.
 	 *
@@ -1963,7 +1979,7 @@ public class FooPersistenceImpl extends BasePersistenceImpl<Foo>
 			CacheRegistryUtil.clear(FooImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(FooImpl.class.getName());
+		EntityCacheUtil.clearCache(FooImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -2242,10 +2258,12 @@ public class FooPersistenceImpl extends BasePersistenceImpl<Foo>
 		}
 
 		EntityCacheUtil.putResult(FooModelImpl.ENTITY_CACHE_ENABLED,
-			FooImpl.class, foo.getPrimaryKey(), foo);
+			FooImpl.class, foo.getPrimaryKey(), foo, false);
 
 		clearUniqueFindersCache(foo);
 		cacheUniqueFindersCache(foo);
+
+		foo.resetOriginalValues();
 
 		return foo;
 	}

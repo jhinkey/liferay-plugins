@@ -104,6 +104,23 @@ public class CalendarServiceUtil {
 		return getService().getCalendar(calendarId);
 	}
 
+	public static java.util.List<com.liferay.calendar.model.Calendar> getCalendarResourceCalendars(
+		long groupId, long calendarResourceId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return getService()
+				   .getCalendarResourceCalendars(groupId, calendarResourceId);
+	}
+
+	public static java.util.List<com.liferay.calendar.model.Calendar> getCalendarResourceCalendars(
+		long groupId, long calendarResourceId, boolean defaultCalendar)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return getService()
+				   .getCalendarResourceCalendars(groupId, calendarResourceId,
+			defaultCalendar);
+	}
+
 	public static void importCalendar(long calendarId, java.lang.String data,
 		java.lang.String type) throws java.lang.Exception {
 		getService().importCalendar(calendarId, data, type);
@@ -258,6 +275,7 @@ public class CalendarServiceUtil {
 	/**
 	 * @deprecated As of 6.2.0
 	 */
+	@Deprecated
 	public void setService(CalendarService service) {
 	}
 

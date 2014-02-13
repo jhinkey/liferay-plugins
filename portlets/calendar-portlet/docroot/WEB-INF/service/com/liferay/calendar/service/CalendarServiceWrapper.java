@@ -99,6 +99,24 @@ public class CalendarServiceWrapper implements CalendarService,
 	}
 
 	@Override
+	public java.util.List<com.liferay.calendar.model.Calendar> getCalendarResourceCalendars(
+		long groupId, long calendarResourceId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _calendarService.getCalendarResourceCalendars(groupId,
+			calendarResourceId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.calendar.model.Calendar> getCalendarResourceCalendars(
+		long groupId, long calendarResourceId, boolean defaultCalendar)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _calendarService.getCalendarResourceCalendars(groupId,
+			calendarResourceId, defaultCalendar);
+	}
+
+	@Override
 	public void importCalendar(long calendarId, java.lang.String data,
 		java.lang.String type) throws java.lang.Exception {
 		_calendarService.importCalendar(calendarId, data, type);
@@ -233,6 +251,7 @@ public class CalendarServiceWrapper implements CalendarService,
 	/**
 	 * @deprecated As of 6.1.0, replaced by {@link #getWrappedService}
 	 */
+	@Deprecated
 	public CalendarService getWrappedCalendarService() {
 		return _calendarService;
 	}
@@ -240,6 +259,7 @@ public class CalendarServiceWrapper implements CalendarService,
 	/**
 	 * @deprecated As of 6.1.0, replaced by {@link #setWrappedService}
 	 */
+	@Deprecated
 	public void setWrappedCalendarService(CalendarService calendarService) {
 		_calendarService = calendarService;
 	}

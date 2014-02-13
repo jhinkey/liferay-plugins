@@ -323,6 +323,12 @@ public class GadgetLocalServiceWrapper implements GadgetLocalService,
 	}
 
 	@Override
+	public void deleteGadgets(long companyId)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		_gadgetLocalService.deleteGadgets(companyId);
+	}
+
+	@Override
 	public void destroyGadget(java.lang.String uuid, long companyId)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		_gadgetLocalService.destroyGadget(uuid, companyId);
@@ -398,6 +404,7 @@ public class GadgetLocalServiceWrapper implements GadgetLocalService,
 	/**
 	 * @deprecated As of 6.1.0, replaced by {@link #getWrappedService}
 	 */
+	@Deprecated
 	public GadgetLocalService getWrappedGadgetLocalService() {
 		return _gadgetLocalService;
 	}
@@ -405,6 +412,7 @@ public class GadgetLocalServiceWrapper implements GadgetLocalService,
 	/**
 	 * @deprecated As of 6.1.0, replaced by {@link #setWrappedService}
 	 */
+	@Deprecated
 	public void setWrappedGadgetLocalService(
 		GadgetLocalService gadgetLocalService) {
 		_gadgetLocalService = gadgetLocalService;

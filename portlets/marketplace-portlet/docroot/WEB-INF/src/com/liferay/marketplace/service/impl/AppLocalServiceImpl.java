@@ -154,9 +154,11 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 				}
 			}
 			catch (Exception e) {
-				_log.warn(
-					"Unable to read plugin package MD5 checksum for " +
-						pluginPackage.getContext());
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to read plugin package MD5 checksum for " +
+							pluginPackage.getContext());
+				}
 			}
 			finally {
 				StreamUtil.cleanUp(inputStream);
@@ -194,10 +196,22 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 			DeployManagerUtil.getInstalledPluginPackages();
 
 		for (PluginPackage pluginPackage : pluginPackages) {
-			int count = modulePersistence.countByContextName(
+			List<Module> modules = modulePersistence.findByContextName(
 				pluginPackage.getContext());
 
-			if (count > 0) {
+			boolean installedApp = false;
+
+			for (Module module : modules) {
+				App app = appPersistence.fetchByPrimaryKey(module.getAppId());
+
+				if ((app != null) && app.isInstalled()) {
+					installedApp = true;
+
+					break;
+				}
+			}
+
+			if (installedApp) {
 				continue;
 			}
 

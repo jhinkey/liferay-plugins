@@ -346,6 +346,10 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByGroupId(groupId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<TasksEntry> list = findByGroupId(groupId, count - 1, count,
 				orderByComparator);
 
@@ -607,7 +611,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, TasksEntryImpl.class);
@@ -782,7 +786,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 				TasksEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -911,7 +915,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -1193,6 +1197,10 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 	public TasksEntry fetchByUserId_Last(long userId,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByUserId(userId);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<TasksEntry> list = findByUserId(userId, count - 1, count,
 				orderByComparator);
@@ -1689,6 +1697,10 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 	public TasksEntry fetchByAssigneeUserId_Last(long assigneeUserId,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByAssigneeUserId(assigneeUserId);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<TasksEntry> list = findByAssigneeUserId(assigneeUserId, count - 1,
 				count, orderByComparator);
@@ -2187,6 +2199,10 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 	public TasksEntry fetchByResolverUserId_Last(long resolverUserId,
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByResolverUserId(resolverUserId);
+
+		if (count == 0) {
+			return null;
+		}
 
 		List<TasksEntry> list = findByResolverUserId(resolverUserId, count - 1,
 				count, orderByComparator);
@@ -2702,6 +2718,10 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_U(groupId, userId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<TasksEntry> list = findByG_U(groupId, userId, count - 1, count,
 				orderByComparator);
 
@@ -2974,7 +2994,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, TasksEntryImpl.class);
@@ -3154,7 +3174,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 				TasksEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -3296,7 +3316,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -3610,6 +3630,10 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_A(groupId, assigneeUserId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<TasksEntry> list = findByG_A(groupId, assigneeUserId, count - 1,
 				count, orderByComparator);
 
@@ -3883,7 +3907,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, TasksEntryImpl.class);
@@ -4063,7 +4087,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 				TasksEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -4206,7 +4230,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -4520,6 +4544,10 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByG_R(groupId, resolverUserId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<TasksEntry> list = findByG_R(groupId, resolverUserId, count - 1,
 				count, orderByComparator);
 
@@ -4793,7 +4821,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			if (getDB().isSupportsInlineDistinct()) {
 				q.addEntity(_FILTER_ENTITY_ALIAS, TasksEntryImpl.class);
@@ -4973,7 +5001,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 				TasksEntry.class.getName(),
 				_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN, groupId);
 
-		SQLQuery q = session.createSQLQuery(sql);
+		SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 		q.setFirstResult(0);
 		q.setMaxResults(2);
@@ -5116,7 +5144,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		try {
 			session = openSession();
 
-			SQLQuery q = session.createSQLQuery(sql);
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
 			q.addScalar(COUNT_COLUMN_NAME,
 				com.liferay.portal.kernel.dao.orm.Type.LONG);
@@ -5141,6 +5169,10 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 
 	private static final String _FINDER_COLUMN_G_R_GROUPID_2 = "tasksEntry.groupId = ? AND ";
 	private static final String _FINDER_COLUMN_G_R_RESOLVERUSERID_2 = "tasksEntry.resolverUserId = ?";
+
+	public TasksEntryPersistenceImpl() {
+		setModelClass(TasksEntry.class);
+	}
 
 	/**
 	 * Caches the tasks entry in the entity cache if it is enabled.
@@ -5187,7 +5219,7 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 			CacheRegistryUtil.clear(TasksEntryImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(TasksEntryImpl.class.getName());
+		EntityCacheUtil.clearCache(TasksEntryImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -5499,7 +5531,9 @@ public class TasksEntryPersistenceImpl extends BasePersistenceImpl<TasksEntry>
 		}
 
 		EntityCacheUtil.putResult(TasksEntryModelImpl.ENTITY_CACHE_ENABLED,
-			TasksEntryImpl.class, tasksEntry.getPrimaryKey(), tasksEntry);
+			TasksEntryImpl.class, tasksEntry.getPrimaryKey(), tasksEntry, false);
+
+		tasksEntry.resetOriginalValues();
 
 		return tasksEntry;
 	}

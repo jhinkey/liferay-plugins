@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -101,6 +102,9 @@ public class KBArticleClp extends BaseModelImpl<KBArticle> implements KBArticle 
 		attributes.put("statusByUserId", getStatusByUserId());
 		attributes.put("statusByUserName", getStatusByUserName());
 		attributes.put("statusDate", getStatusDate());
+
+		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
+		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -251,6 +255,9 @@ public class KBArticleClp extends BaseModelImpl<KBArticle> implements KBArticle 
 		if (statusDate != null) {
 			setStatusDate(statusDate);
 		}
+
+		_entityCacheEnabled = GetterUtil.getBoolean("entityCacheEnabled");
+		_finderCacheEnabled = GetterUtil.getBoolean("finderCacheEnabled");
 	}
 
 	@Override
@@ -991,6 +998,7 @@ public class KBArticleClp extends BaseModelImpl<KBArticle> implements KBArticle 
 	/**
 	 * @deprecated As of 6.1.0, replaced by {@link #isApproved}
 	 */
+	@Deprecated
 	@Override
 	public boolean getApproved() {
 		return isApproved();
@@ -1049,16 +1057,6 @@ public class KBArticleClp extends BaseModelImpl<KBArticle> implements KBArticle 
 	@Override
 	public boolean isIncomplete() {
 		if (getStatus() == WorkflowConstants.STATUS_INCOMPLETE) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-
-	@Override
-	public boolean isInTrash() {
-		if (getStatus() == WorkflowConstants.STATUS_IN_TRASH) {
 			return true;
 		}
 		else {
@@ -1224,6 +1222,16 @@ public class KBArticleClp extends BaseModelImpl<KBArticle> implements KBArticle 
 	@Override
 	public int hashCode() {
 		return (int)getPrimaryKey();
+	}
+
+	@Override
+	public boolean isEntityCacheEnabled() {
+		return _entityCacheEnabled;
+	}
+
+	@Override
+	public boolean isFinderCacheEnabled() {
+		return _finderCacheEnabled;
 	}
 
 	@Override
@@ -1421,4 +1429,6 @@ public class KBArticleClp extends BaseModelImpl<KBArticle> implements KBArticle 
 	private String _statusByUserName;
 	private Date _statusDate;
 	private BaseModel<?> _kbArticleRemoteModel;
+	private boolean _entityCacheEnabled;
+	private boolean _finderCacheEnabled;
 }

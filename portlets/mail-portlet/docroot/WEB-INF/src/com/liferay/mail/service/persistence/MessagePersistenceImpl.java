@@ -346,6 +346,10 @@ public class MessagePersistenceImpl extends BasePersistenceImpl<Message>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByCompanyId(companyId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Message> list = findByCompanyId(companyId, count - 1, count,
 				orderByComparator);
 
@@ -831,6 +835,10 @@ public class MessagePersistenceImpl extends BasePersistenceImpl<Message>
 		OrderByComparator orderByComparator) throws SystemException {
 		int count = countByFolderId(folderId);
 
+		if (count == 0) {
+			return null;
+		}
+
 		List<Message> list = findByFolderId(folderId, count - 1, count,
 				orderByComparator);
 
@@ -1295,6 +1303,10 @@ public class MessagePersistenceImpl extends BasePersistenceImpl<Message>
 	private static final String _FINDER_COLUMN_F_R_FOLDERID_2 = "message.folderId = ? AND ";
 	private static final String _FINDER_COLUMN_F_R_REMOTEMESSAGEID_2 = "message.remoteMessageId = ?";
 
+	public MessagePersistenceImpl() {
+		setModelClass(Message.class);
+	}
+
 	/**
 	 * Caches the message in the entity cache if it is enabled.
 	 *
@@ -1344,7 +1356,7 @@ public class MessagePersistenceImpl extends BasePersistenceImpl<Message>
 			CacheRegistryUtil.clear(MessageImpl.class.getName());
 		}
 
-		EntityCacheUtil.clearCache(MessageImpl.class.getName());
+		EntityCacheUtil.clearCache(MessageImpl.class);
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -1608,10 +1620,12 @@ public class MessagePersistenceImpl extends BasePersistenceImpl<Message>
 		}
 
 		EntityCacheUtil.putResult(MessageModelImpl.ENTITY_CACHE_ENABLED,
-			MessageImpl.class, message.getPrimaryKey(), message);
+			MessageImpl.class, message.getPrimaryKey(), message, false);
 
 		clearUniqueFindersCache(message);
 		cacheUniqueFindersCache(message);
+
+		message.resetOriginalValues();
 
 		return message;
 	}
