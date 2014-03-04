@@ -24,11 +24,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * WebRTC connection state scheduler
+ * Represents the WebRTC manager connection state scheduler, which checks all
+ * the connection states of the WebRTC managers at a regular interval.
  *
- * This class is instantiated by Liferay and checks at a regular
- * interval all the connection states of all the WebRTC managers.
- * 
  * @author Philippe Proulx
  */
 public class WebRTCManager {

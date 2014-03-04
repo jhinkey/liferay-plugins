@@ -15,12 +15,10 @@
 package com.liferay.chat.video;
 
 /**
- * WebRTC connection (thread safe)
+ * Represents the WebRTC connection (thread-safe) between two clients. It is
+ * owned by both connected clients, but still holds a reference to the original
+ * caller.
  *
- * This represents a connection between two clients. It is owned by
- * both clients connected together, but still holds a reference to
- * the original caller so that we know it later.
- * 
  * @author Philippe Proulx
  */
 public class WebRTCConnection {
