@@ -24,6 +24,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Represents the WebRTC manager connection state scheduler, which checks all
+ * the connection states of the WebRTC managers at a regular interval.
+ *
  * @author Philippe Proulx
  */
 public class WebRTCManager {
