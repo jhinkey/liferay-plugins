@@ -81,22 +81,21 @@ in ascending chronological order.
 
 The number of stars for the ratings has changed from a hardcoded value of `10`
 to the value of the `knowledge.base.ratings.number.of.stars` property in
-`portal.properties`.
+`portlet.properties`.
 
 #### Who is affected?
 
-Any installation where there are existing articles with a rating.
+Any installation where that has existing articles with ratings is affected.
 
 #### How should I update my code?
 
-If you need to keep the previous behaviour, you should change the
-`knowledge.base.ratings.number.of.stars` property value back to `10` in a
-`portal-ext.properties` file.
+If you need to keep the previous behaviour, you should set the
+`knowledge.base.ratings.number.of.stars` property value to `10` in a
+`portlet-ext.properties` file.
 
 #### Why was this change made?
 
 This change makes ratings in Knowledge Base consistent with other components in
-the portal, and allows administrators to configure the number of stars, if
-necessary.
+the portal and lets administrators configure the number of stars.
 
 ---------------------------------------
