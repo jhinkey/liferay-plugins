@@ -52,6 +52,8 @@ public class AsgardAMIDeployer extends BaseAMITool {
 			"base.dir");
 		CmdLineParser.Option imageNameOption = cmdLineParser.addStringOption(
 			"image.name");
+		CmdLineParser.Option openAsgardURLOption =
+			cmdLineParser.addBooleanOption("open.asgard.url");
 		CmdLineParser.Option parallelDeploymentOption =
 			cmdLineParser.addBooleanOption("parallel.deployment");
 		CmdLineParser.Option propertiesFileNameOption =
@@ -64,6 +66,8 @@ public class AsgardAMIDeployer extends BaseAMITool {
 				(String)cmdLineParser.getOptionValue(baseDirOption),
 				(String)cmdLineParser.getOptionValue(imageNameOption),
 				(Boolean)cmdLineParser.getOptionValue(
+					openAsgardURLOption, Boolean.FALSE),
+				(Boolean)cmdLineParser.getOptionValue(
 					parallelDeploymentOption, Boolean.FALSE),
 				(String)cmdLineParser.getOptionValue(propertiesFileNameOption));
 		}
@@ -71,12 +75,16 @@ public class AsgardAMIDeployer extends BaseAMITool {
 			e.printStackTrace();
 
 			System.exit(-1);
+
+			return;
 		}
+
+		System.exit(0);
 	}
 
 	public AsgardAMIDeployer(
-			String baseDirName, String imageName, boolean parallelDeployment,
-			String propertiesFileName)
+			String baseDirName, String imageName, boolean openAsgardURLOption,
+			boolean parallelDeployment, String propertiesFileName)
 		throws Exception {
 
 		super(propertiesFileName);
@@ -118,7 +126,9 @@ public class AsgardAMIDeployer extends BaseAMITool {
 
 		deactivateOldScalingGroup(autoScalingGroupName);
 
-		openAsgardURL();
+		if (openAsgardURLOption) {
+			openAsgardURL();
+		}
 
 		System.out.println(
 			"Deployed Auto Scaling Group " + autoScalingGroupName);
@@ -162,7 +172,7 @@ public class AsgardAMIDeployer extends BaseAMITool {
 		boolean deployed = false;
 		JSONObject loadBalancerJSONObject = null;
 
-		for (int i = 1; i < 30; i++) {
+		for (int i = 1; i < 50; i++) {
 			String json = _jsonWebServiceClient.doGet(
 				"/" + availabilityZone + "/loadBalancer/show/" +
 					asgardClusterName + ".json",

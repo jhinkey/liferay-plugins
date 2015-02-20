@@ -124,25 +124,30 @@ public class AdminPortlet extends BaseKBPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		UploadPortletRequest uploadPortletRequest =
-			PortalUtil.getUploadPortletRequest(actionRequest);
-
-		long parentKBFolderId = ParamUtil.getLong(
-			uploadPortletRequest, "parentKBFolderId",
-			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
-
-		String fileName = uploadPortletRequest.getFileName("file");
-
-		if (Validator.isNull(fileName)) {
-			throw new KBArticleImportException("File name is null");
-		}
-
 		InputStream inputStream = null;
 
 		try {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			UploadPortletRequest uploadPortletRequest =
+				PortalUtil.getUploadPortletRequest(actionRequest);
+
+			long parentKBFolderId = ParamUtil.getLong(
+				uploadPortletRequest, "parentKBFolderId",
+				KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+			String fileName = uploadPortletRequest.getFileName("file");
+
+			if (Validator.isNull(fileName)) {
+				throw new KBArticleImportException("File name is null");
+			}
+
+			boolean prioritizeUpdatedKBArticles = ParamUtil.getBoolean(
+				uploadPortletRequest, "prioritizeUpdatedKBArticles");
+			boolean prioritizeByNumericalPrefix = ParamUtil.getBoolean(
+				uploadPortletRequest, "prioritizeByNumericalPrefix");
+
 			inputStream = uploadPortletRequest.getFileAsStream("file");
 
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
@@ -153,6 +158,7 @@ public class AdminPortlet extends BaseKBPortlet {
 			int importedKBArticlesCount =
 				KBArticleServiceUtil.addKBArticlesMarkdown(
 					themeDisplay.getScopeGroupId(), parentKBFolderId, fileName,
+					prioritizeUpdatedKBArticles, prioritizeByNumericalPrefix,
 					inputStream, serviceContext);
 
 			SessionMessages.add(
@@ -393,7 +399,8 @@ public class AdminPortlet extends BaseKBPortlet {
 
 	@Override
 	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof KBTemplateContentException ||
+		if (cause instanceof KBArticleImportException ||
+			cause instanceof KBTemplateContentException ||
 			cause instanceof KBTemplateTitleException ||
 			cause instanceof NoSuchTemplateException ||
 			super.isSessionErrorException(cause)) {

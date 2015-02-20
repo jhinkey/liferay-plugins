@@ -357,6 +357,7 @@
 			<var name="plugin.pom.file" value="${sdk.dir}/dist/${plugin.name}-${plugin.full.version}.pom" />
 			<var name="plugin.sources.file" value="${sdk.dir}/dist/${plugin.name}-${plugin.full.version}-sources.${plugin.packaging}" />
 			<var name="plugin.src.file" value="${sdk.dir}/dist/${plugin.name}-src-${plugin.full.version}.zip" />
+			<var name="plugin.wsdd.file" value="${sdk.dir}/dist/${plugin.name}-wsdd-${plugin.full.version}.jar" />
 
 			<if>
 				<available file="@{module.dir}/src" />
@@ -530,7 +531,7 @@
 											<ivy:retrieve
 												overwriteMode="always"
 												pattern="@{ivy.xml.dir}/lib/[artifact].[ext]"
-												type="bundle,eclipse-plugin,jar,orbit"
+												type="bundle,eclipse-plugin,jar,maven-plugin,orbit"
 											/>
 
 											<ivy:retrieve
@@ -543,7 +544,7 @@
 											<ivy:retrieve
 												overwriteMode="always"
 												pattern="@{ivy.xml.dir}/docroot/WEB-INF/lib/[artifact].[ext]"
-												type="bundle,eclipse-plugin,jar,orbit"
+												type="bundle,eclipse-plugin,jar,maven-plugin,orbit"
 											/>
 
 											<ivy:retrieve

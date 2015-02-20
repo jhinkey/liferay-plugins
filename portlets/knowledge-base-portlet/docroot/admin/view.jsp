@@ -21,6 +21,8 @@ long kbFolderClassNameId = PortalUtil.getClassNameId(KBFolderConstants.getClassN
 
 long parentResourceClassNameId = ParamUtil.getLong(request, "parentResourceClassNameId", kbFolderClassNameId);
 long parentResourcePrimKey = ParamUtil.getLong(request, "parentResourcePrimKey", KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+KBArticleURLHelper kbArticleURLHelper = new KBArticleURLHelper(renderRequest, renderResponse, templatePath);
 %>
 
 <liferay-util:include page="/admin/top_tabs.jsp" servletContext="<%= application %>" />
@@ -32,15 +34,6 @@ long parentResourcePrimKey = ParamUtil.getLong(request, "parentResourcePrimKey",
 <aui:form action="<%= searchURL %>" method="get" name="fm">
 	<liferay-portlet:renderURLParams varImpl="searchURL" />
 	<aui:input name="resourcePrimKeys" type="hidden" />
-
-	<liferay-ui:error exception="<%= KBArticleImportException.class %>">
-
-		<%
-		KBArticleImportException kbaie = (KBArticleImportException)errorException;
-		%>
-
-		<%= LanguageUtil.format(locale, "an-unexpected-error-occurred-while-importing-articles-x", kbaie.getLocalizedMessage()) %>
-	</liferay-ui:error>
 
 	<liferay-ui:error exception="<%= KBArticlePriorityException.class %>" message='<%= LanguageUtil.format(request, "please-enter-a-priority-that-is-greater-than-x", "0", false) %>' translateMessage="<%= false %>" />
 
@@ -329,12 +322,10 @@ long parentResourcePrimKey = ParamUtil.getLong(request, "parentResourcePrimKey",
 					value="<%= kbArticle.getModifiedDate() %>"
 				/>
 
-				<liferay-ui:search-container-column-text
-					cssClass="kb-column-no-wrap"
+				<liferay-ui:search-container-column-status
 					href="<%= rowURL %>"
 					name="status"
 					orderable="<%= true %>"
-					value='<%= kbArticle.getStatus() + " (" + LanguageUtil.get(request, WorkflowConstants.getStatusLabel(kbArticle.getStatus())) + ")" %>'
 				/>
 
 				<liferay-ui:search-container-column-text
@@ -360,18 +351,18 @@ long parentResourcePrimKey = ParamUtil.getLong(request, "parentResourcePrimKey",
 				%>
 
 				<div class="alert alert-info">
-					<liferay-portlet:renderURL var="viewKBArticleURL">
-						<portlet:param name="mvcPath" value='<%= templatePath + "view_article.jsp" %>' />
-						<portlet:param name="resourcePrimKey" value="<%= String.valueOf(parentResourcePrimKey) %>" />
-					</liferay-portlet:renderURL>
 
 					<%
+					KBArticle parentKBArticle = KBArticleServiceUtil.getLatestKBArticle(parentResourcePrimKey, WorkflowConstants.STATUS_ANY);
+
+					PortletURL viewKBArticleURL = kbArticleURLHelper.createViewURL(parentKBArticle);
+
 					StringBundler sb = new StringBundler(5);
 
 					sb.append("<a href=\"");
-					sb.append(viewKBArticleURL);
+					sb.append(viewKBArticleURL.toString());
 					sb.append("\">");
-					sb.append(BeanPropertiesUtil.getString(KBArticleServiceUtil.getLatestKBArticle(parentResourcePrimKey, WorkflowConstants.STATUS_ANY), "title"));
+					sb.append(BeanPropertiesUtil.getString(parentKBArticle, "title"));
 					sb.append("</a>");
 					%>
 

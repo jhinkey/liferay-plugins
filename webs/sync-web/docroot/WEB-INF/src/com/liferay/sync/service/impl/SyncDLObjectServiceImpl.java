@@ -36,6 +36,8 @@ import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
 import com.liferay.portal.model.Group;
@@ -781,7 +783,9 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 				fileEntryId, sourceFileName, mimeType, title, description,
 				changeLog, majorVersion, patchedFile, checksum, serviceContext);
 
-			if (PortletPropsValues.SYNC_FILE_DIFF_CACHE_ENABLED) {
+			if (PortletPropsValues.SYNC_FILE_DIFF_CACHE_ENABLED &&
+				!sourceVersion.equals(syncDLObject.getVersion())) {
+
 				DLFileVersion sourceDLFileVersion =
 					dlFileVersionLocalService.getFileVersion(
 						fileEntryId, sourceVersion);
@@ -880,7 +884,15 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 							jsonWebServiceActionParametersMap));
 				}
 				catch (Exception e) {
-					String json = "{\"exception\": \"" + e.getMessage() + "\"}";
+					String message = e.getMessage();
+
+					if (!message.startsWith(StringPool.QUOTE) &&
+						!message.endsWith(StringPool.QUOTE)) {
+
+						message = StringUtil.quote(message, StringPool.QUOTE);
+					}
+
+					String json = "{\"exception\": " + message + "}";
 
 					responseMap.put(zipFileId, json);
 				}
@@ -1001,7 +1013,7 @@ public class SyncDLObjectServiceImpl extends SyncDLObjectServiceBaseImpl {
 		for (SyncDLObject curSyncDLObject : curSyncDLObjects) {
 			String type = curSyncDLObject.getType();
 
-			if (type.equals("file")) {
+			if (!type.equals(SyncConstants.TYPE_FOLDER)) {
 				continue;
 			}
 
