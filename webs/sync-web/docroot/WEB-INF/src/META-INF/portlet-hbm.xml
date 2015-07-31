@@ -4,8 +4,8 @@
 <hibernate-mapping default-lazy="false" auto-import="false">
 	<import class="com.liferay.sync.model.SyncDLFileVersionDiff" />
 	<import class="com.liferay.sync.model.SyncDLObject" />
+	<import class="com.liferay.sync.model.SyncPreferences" />
 	<class name="com.liferay.sync.model.impl.SyncDLFileVersionDiffImpl" table="SyncDLFileVersionDiff">
-		<cache usage="read-write" />
 		<id name="syncDLFileVersionDiffId" type="long">
 			<generator class="assigned" />
 		</id>
@@ -17,11 +17,12 @@
 		<property name="expirationDate" type="org.hibernate.type.TimestampType" />
 	</class>
 	<class name="com.liferay.sync.model.impl.SyncDLObjectImpl" table="SyncDLObject">
-		<cache usage="read-write" />
 		<id name="syncDLObjectId" type="long">
 			<generator class="assigned" />
 		</id>
 		<property name="companyId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
+		<property name="userId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
+		<property name="userName" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property name="createTime" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property name="modifiedTime" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property name="repositoryId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
@@ -31,7 +32,7 @@
 		<property name="mimeType" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property name="description" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property name="changeLog" type="com.liferay.portal.dao.orm.hibernate.StringType" />
-		<property name="extraSettings" type="com.liferay.portal.dao.orm.hibernate.StringType" />
+		<property name="extraSettings" type="com.liferay.portal.dao.orm.hibernate.StringClobType" />
 		<property name="version" type="com.liferay.portal.dao.orm.hibernate.StringType" />
 		<property name="versionId" type="com.liferay.portal.dao.orm.hibernate.LongType" />
 		<property name="size" type="com.liferay.portal.dao.orm.hibernate.LongType" column="size_" />

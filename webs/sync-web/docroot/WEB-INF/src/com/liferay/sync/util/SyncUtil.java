@@ -20,6 +20,7 @@ import com.liferay.io.delta.DeltaUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.ClassUtil;
@@ -27,13 +28,16 @@ import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Group;
-import com.liferay.portal.model.Lock;
+import com.liferay.portal.model.User;
+import com.liferay.portal.security.permission.PermissionChecker;
+import com.liferay.portal.security.permission.PermissionThreadLocal;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portlet.documentlibrary.NoSuchFileVersionException;
@@ -46,6 +50,7 @@ import com.liferay.sync.SyncSiteUnavailableException;
 import com.liferay.sync.model.SyncConstants;
 import com.liferay.sync.model.SyncDLObject;
 import com.liferay.sync.model.impl.SyncDLObjectImpl;
+import com.liferay.sync.shared.util.SyncPermissionsConstants;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -285,6 +290,15 @@ public class SyncUtil {
 	}
 
 	public static boolean isSyncEnabled(Group group) {
+		if (group.isUser() &&
+			!PrefsPropsUtil.getBoolean(
+				group.getCompanyId(),
+				PortletPropsKeys.SYNC_ALLOW_USER_PERSONAL_SITES,
+				PortletPropsValues.SYNC_ALLOW_USER_PERSONAL_SITES)) {
+
+			return false;
+		}
+
 		return GetterUtil.getBoolean(
 			group.getTypeSettingsProperty("syncEnabled"), true);
 	}
@@ -339,48 +353,25 @@ public class SyncUtil {
 			group.getTypeSettingsProperty("syncSiteMemberFilePermissions"));
 
 		if (syncSiteMemberFilePermissions ==
-				SyncConstants.PERMISSIONS_DEFAULT) {
+				SyncPermissionsConstants.PERMISSIONS_DEFAULT) {
 
 			serviceContext.setDeriveDefaultPermissions(true);
-		}
-		else if (syncSiteMemberFilePermissions ==
-					SyncConstants.PERMISSIONS_NONE) {
 
-			serviceContext.setGroupPermissions(new String[0]);
+			return;
 		}
-		else if (syncSiteMemberFilePermissions ==
-					SyncConstants.PERMISSIONS_VIEW_ONLY) {
 
-			serviceContext.setGroupPermissions(new String[] {"VIEW"});
-		}
-		else if (syncSiteMemberFilePermissions ==
-					SyncConstants.PERMISSIONS_VIEW_AND_ADD_DISCUSSION) {
+		String[] resourceActions = null;
 
-			if (folder) {
-				serviceContext.setGroupPermissions(new String[] {"VIEW"});
-			}
-			else {
-				serviceContext.setGroupPermissions(
-					new String[] {"ADD_DISCUSSION", "VIEW"});
-			}
+		if (folder) {
+			resourceActions = SyncPermissionsConstants.getFolderResourceActions(
+				syncSiteMemberFilePermissions);
 		}
-		else if (syncSiteMemberFilePermissions ==
-					SyncConstants.PERMISSIONS_FULL_ACCESS) {
+		else {
+			resourceActions = SyncPermissionsConstants.getFileResourceActions(
+				syncSiteMemberFilePermissions);
+		}
 
-			if (folder) {
-				serviceContext.setGroupPermissions(
-					new String[] {
-						"ADD_DOCUMENT", "ADD_SHORTCUT", "ADD_SUBFOLDER",
-						"DELETE", "UPDATE","VIEW"
-					});
-			}
-			else {
-				serviceContext.setGroupPermissions(
-					new String[] {
-						"ADD_DISCUSSION" , "DELETE", "UPDATE", "VIEW"
-					});
-			}
-		}
+		serviceContext.setGroupPermissions(resourceActions);
 	}
 
 	public static SyncDLObject toSyncDLObject(
@@ -437,6 +428,23 @@ public class SyncUtil {
 		SyncDLObject syncDLObject = new SyncDLObjectImpl();
 
 		syncDLObject.setCompanyId(dlFileVersion.getCompanyId());
+
+		long userId = 0;
+		String userName = StringPool.BLANK;
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		if (permissionChecker != null) {
+			User user = permissionChecker.getUser();
+
+			userId = user.getUserId();
+			userName = user.getFullName();
+		}
+
+		syncDLObject.setUserId(userId);
+		syncDLObject.setUserName(userName);
+
 		syncDLObject.setCreateDate(dlFileVersion.getCreateDate());
 		syncDLObject.setModifiedDate(dlFileVersion.getModifiedDate());
 		syncDLObject.setRepositoryId(dlFileVersion.getRepositoryId());
@@ -475,6 +483,22 @@ public class SyncUtil {
 		SyncDLObject syncDLObject = new SyncDLObjectImpl();
 
 		syncDLObject.setCompanyId(dlFolder.getCompanyId());
+
+		long userId = 0;
+		String userName = StringPool.BLANK;
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		if (permissionChecker != null) {
+			User user = permissionChecker.getUser();
+
+			userId = user.getUserId();
+			userName = user.getFullName();
+		}
+
+		syncDLObject.setUserId(userId);
+		syncDLObject.setUserName(userName);
 		syncDLObject.setCreateDate(dlFolder.getCreateDate());
 		syncDLObject.setModifiedDate(dlFolder.getModifiedDate());
 		syncDLObject.setRepositoryId(dlFolder.getRepositoryId());

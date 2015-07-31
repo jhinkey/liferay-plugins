@@ -18,6 +18,8 @@ import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.admin.directory.model.Members;
 import com.google.api.services.groupssettings.model.Groups;
 
+import com.liferay.google.apps.connector.util.GoogleDirectoryUtil;
+import com.liferay.google.apps.connector.util.GoogleGroupssettingsUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -205,7 +207,7 @@ public class GoogleMailGroupsUtil {
 					new LinkedHashMap<>();
 
 				userParams.put("inherit", Boolean.TRUE);
-				userParams.put("usersGroups", new Long(group.getGroupId()));
+				userParams.put("usersGroups", Long.valueOf(group.getGroupId()));
 
 				List<User> users = UserLocalServiceUtil.search(
 					group.getCompanyId(), null,

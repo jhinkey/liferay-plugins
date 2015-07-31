@@ -68,7 +68,7 @@ request.setAttribute("view_user.jsp-user", user2);
 						</c:if>
 
 						<c:if test="<%= follower %>">
-							<span class="lfr-asset-icon lfr-asset-follower last">
+							<span class="last lfr-asset-follower lfr-asset-icon">
 								<i class="icon-user"></i>
 
 								<liferay-ui:message key="follower" />
@@ -132,7 +132,7 @@ request.setAttribute("view_user.jsp-user", user2);
 				</aui:layout>
 			</aui:layout>
 
-			<div class="lfr-detail-info field-group" data-sectionId="details" data-title="<%= LanguageUtil.get(request, "details") %>">
+			<div class="field-group lfr-detail-info" data-sectionId="details" data-title="<%= LanguageUtil.get(request, "details") %>">
 				<i class="icon-edit"></i>
 
 				<c:if test="<%= showIcon %>">
@@ -216,10 +216,10 @@ request.setAttribute("view_user.jsp-user", user2);
 								Group group = themeDisplay.getScopeGroup();
 
 								if (group.isUser()) {
-									groupParams.put("usersGroups", new Long(group.getClassPK()));
+									groupParams.put("usersGroups", Long.valueOf(group.getClassPK()));
 								}
 								else {
-									groupParams.put("usersGroups", new Long(themeDisplay.getUserId()));
+									groupParams.put("usersGroups", Long.valueOf(themeDisplay.getUserId()));
 								}
 
 								groupParams.put("active", Boolean.TRUE);
@@ -248,13 +248,7 @@ request.setAttribute("view_user.jsp-user", user2);
 											for (Group curGroup : results) {
 											%>
 
-												<liferay-portlet:actionURL portletName="<%= PortletKeys.SITE_REDIRECTOR %>" var="siteURL" windowState="<%= LiferayWindowState.NORMAL.toString() %>">
-													<portlet:param name="struts_action" value="/my_sites/view" />
-													<portlet:param name="groupId" value="<%= String.valueOf(curGroup.getGroupId()) %>" />
-													<portlet:param name="privateLayout" value="<%= String.valueOf(!curGroup.hasPublicLayouts()) %>" />
-												</liferay-portlet:actionURL>
-
-												<li class="user-information-sites <%= SocialOfficeServiceUtil.isSocialOfficeGroup(curGroup.getGroupId()) ? "social-office-enabled" : "social-office-disabled" %>"><a href="<%= siteURL %>"><%= HtmlUtil.escape(curGroup.getDescriptiveName(locale)) %></a></li>
+												<li class="user-information-sites <%= SocialOfficeServiceUtil.isSocialOfficeGroup(curGroup.getGroupId()) ? "social-office-enabled" : "social-office-disabled" %>"><a href="<%= curGroup.getDisplayURL(themeDisplay, !curGroup.hasPublicLayouts()) %>"><%= HtmlUtil.escape(curGroup.getDescriptiveName(locale)) %></a></li>
 
 											<%
 											}

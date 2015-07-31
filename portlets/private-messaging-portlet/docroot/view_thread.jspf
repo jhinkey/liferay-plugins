@@ -18,9 +18,13 @@
 --%>
 
 <%
-UserThreadLocalServiceUtil.markUserThreadAsRead(user.getUserId(), mbThreadId);
+String backURL = ParamUtil.getString(request, "backURL");
+
+String subject = PrivateMessagingUtil.getThreadSubject(mbThreadId);
 
 boolean hasExistingRecipients = false;
+
+UserThreadLocalServiceUtil.markUserThreadAsRead(user.getUserId(), mbThreadId);
 %>
 
 <aui:button-row cssClass="controls">
@@ -36,12 +40,6 @@ boolean hasExistingRecipients = false;
 
 	<aui:button data-delete-message-url="<%= deleteMessageURL %>" name="deleteMessage" value="delete" />
 </aui:button-row >
-
-<portlet:renderURL var="backURL" windowState="<%= WindowState.NORMAL.toString() %>" />
-
-<%
-String subject = PrivateMessagingUtil.getThreadSubject(mbThreadId);
-%>
 
 <liferay-ui:header
 	backLabel="messages"
@@ -66,13 +64,12 @@ String subject = PrivateMessagingUtil.getThreadSubject(mbThreadId);
 
 		<c:choose>
 			<c:when test="<%= LAYOUT_USER_PUBLIC_LAYOUTS_ENABLED && curUser.isActive() %>">
-				<liferay-portlet:actionURL portletName="<%= PortletKeys.MY_SITES %>" var="publicPagesURL">
-					<portlet:param name="struts_action" value="/my_sites/view" />
-					<portlet:param name="groupId" value="<%= String.valueOf(curUser.getGroup().getGroupId()) %>" />
-					<portlet:param name="privateLayout" value="<%= Boolean.FALSE.toString() %>" />
-				</liferay-portlet:actionURL>
 
-				<a class="profile-link" href="<%= publicPagesURL %>"><%= HtmlUtil.escape(curUser.getFullName()) %></a>
+				<%
+				Group curUserGroup = curUser.getGroup();
+				%>
+
+				<a class="profile-link" href="<%= curUserGroup.getDisplayURL(themeDisplay, false) %>"><%= HtmlUtil.escape(curUser.getFullName()) %></a>
 			</c:when>
 			<c:otherwise>
 				<c:choose>
@@ -103,13 +100,12 @@ String subject = PrivateMessagingUtil.getThreadSubject(mbThreadId);
 
 	<c:choose>
 		<c:when test="<%= LAYOUT_USER_PUBLIC_LAYOUTS_ENABLED %>">
-			<liferay-portlet:actionURL portletName="<%= PortletKeys.MY_SITES %>" var="selfPublicPagesURL">
-				<portlet:param name="struts_action" value="/my_sites/view" />
-				<portlet:param name="groupId" value="<%= String.valueOf(user.getGroup().getGroupId()) %>" />
-				<portlet:param name="privateLayout" value="<%= Boolean.FALSE.toString() %>" />
-			</liferay-portlet:actionURL>
 
-			<a class="profile-link" href="<%= selfPublicPagesURL %>"><liferay-ui:message key="you" /></a>
+			<%
+			Group userGroup = user.getGroup();
+			%>
+
+			<a class="profile-link" href="<%= userGroup.getDisplayURL(themeDisplay, false) %>"><liferay-ui:message key="you" /></a>
 		</c:when>
 		<c:otherwise>
 			<span class="profile-link"><liferay-ui:message key="you" /></span>
@@ -124,7 +120,7 @@ iteratorURL.setParameter("mbThreadId", String.valueOf(mbThreadId));
 %>
 
 <liferay-ui:search-container
-	emptyResultsMessage="no-messages-found"
+	emptyResultsMessage="no-messages-were-found"
 	iteratorURL="<%= iteratorURL %>"
 	total="<%= UserThreadServiceUtil.getThreadMessagesCount(mbThreadId) %>"
 >
@@ -159,14 +155,8 @@ iteratorURL.setParameter("mbThreadId", String.valueOf(mbThreadId));
 			<div class="message">
 				<c:choose>
 					<c:when test="<%= LAYOUT_USER_PUBLIC_LAYOUTS_ENABLED && curUser.isActive() %>">
-						<liferay-portlet:actionURL portletName="<%= PortletKeys.MY_SITES %>" var="publicPagesURL">
-							<portlet:param name="struts_action" value="/my_sites/view" />
-							<portlet:param name="groupId" value="<%= String.valueOf(curUser.getGroup().getGroupId()) %>" />
-							<portlet:param name="privateLayout" value="<%= Boolean.FALSE.toString() %>" />
-						</liferay-portlet:actionURL>
-
 						<span class="name">
-							<a class="profile-link" href="<%= publicPagesURL %>"><%= HtmlUtil.escape(curUser.getFullName()) %></a>
+							<a class="profile-link" href="<%= curUser.getGroup().getDisplayURL(themeDisplay, false) %>"><%= HtmlUtil.escape(curUser.getFullName()) %></a>
 						</span>
 					</c:when>
 					<c:otherwise>
@@ -341,7 +331,7 @@ iteratorURL.setParameter("mbThreadId", String.valueOf(mbThreadId));
 							complete: function(event, id, obj) {
 								var responseText = obj.responseText;
 
-								var responseData = A.JSON.parse(responseText);
+								var responseData = JSON.parse(responseText);
 
 								if (responseData.success) {
 									document.location.href = '<liferay-portlet:renderURL windowState="<%= WindowState.NORMAL.toString() %>"><portlet:param name="mbThreadId" value="<%= String.valueOf(mbThreadId) %>" /></liferay-portlet:renderURL>';
@@ -372,8 +362,8 @@ iteratorURL.setParameter("mbThreadId", String.valueOf(mbThreadId));
 			caption: '<%= HtmlUtil.escapeJS(subject) %>',
 			delay: 2000,
 			links: '.body .image-thumbnail a',
-			maxHeight: (viewportRegion.height * 0.7),
-			maxWidth: (viewportRegion.width * 0.7)
+			maxHeight: viewportRegion.height * 0.7,
+			maxWidth: viewportRegion.width * 0.7
 		}
 	).render();
 </aui:script>

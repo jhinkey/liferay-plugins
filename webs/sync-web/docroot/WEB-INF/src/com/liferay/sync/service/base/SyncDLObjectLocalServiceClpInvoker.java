@@ -119,38 +119,42 @@ public class SyncDLObjectLocalServiceClpInvoker {
 				"com.liferay.sync.model.SyncDLObject"
 			};
 
-		_methodName83 = "getBeanIdentifier";
+		_methodName85 = "getBeanIdentifier";
 
-		_methodParameterTypes83 = new String[] {  };
+		_methodParameterTypes85 = new String[] {  };
 
-		_methodName84 = "setBeanIdentifier";
+		_methodName86 = "setBeanIdentifier";
 
-		_methodParameterTypes84 = new String[] { "java.lang.String" };
+		_methodParameterTypes86 = new String[] { "java.lang.String" };
 
-		_methodName89 = "addSyncDLObject";
+		_methodName91 = "addSyncDLObject";
 
-		_methodParameterTypes89 = new String[] {
-				"long", "long", "long", "long", "java.lang.String",
+		_methodParameterTypes91 = new String[] {
+				"long", "long", "java.lang.String", "long", "long", "long",
 				"java.lang.String", "java.lang.String", "java.lang.String",
 				"java.lang.String", "java.lang.String", "java.lang.String",
-				"long", "long", "java.lang.String", "java.lang.String",
-				"java.util.Date", "long", "java.lang.String", "java.lang.String",
-				"long", "java.lang.String"
+				"java.lang.String", "long", "long", "java.lang.String",
+				"java.lang.String", "java.util.Date", "long", "java.lang.String",
+				"java.lang.String", "long", "java.lang.String"
 			};
 
-		_methodName90 = "deleteSyncDLObjects";
+		_methodName92 = "deleteSyncDLObjects";
 
-		_methodParameterTypes90 = new String[] {
+		_methodParameterTypes92 = new String[] {
 				"java.lang.String", "java.lang.String"
 			};
 
-		_methodName91 = "fetchSyncDLObject";
+		_methodName93 = "fetchSyncDLObject";
 
-		_methodParameterTypes91 = new String[] { "java.lang.String", "long" };
+		_methodParameterTypes93 = new String[] { "java.lang.String", "long" };
 
-		_methodName92 = "getLatestModifiedTime";
+		_methodName94 = "getLatestModifiedTime";
 
-		_methodParameterTypes92 = new String[] {  };
+		_methodParameterTypes94 = new String[] {  };
+
+		_methodName95 = "getSyncDLObjects";
+
+		_methodParameterTypes95 = new String[] { "long", "long" };
 	}
 
 	public Object invokeMethod(String name, String[] parameterTypes,
@@ -252,56 +256,65 @@ public class SyncDLObjectLocalServiceClpInvoker {
 			return SyncDLObjectLocalServiceUtil.updateSyncDLObject((com.liferay.sync.model.SyncDLObject)arguments[0]);
 		}
 
-		if (_methodName83.equals(name) &&
-				Arrays.deepEquals(_methodParameterTypes83, parameterTypes)) {
+		if (_methodName85.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes85, parameterTypes)) {
 			return SyncDLObjectLocalServiceUtil.getBeanIdentifier();
 		}
 
-		if (_methodName84.equals(name) &&
-				Arrays.deepEquals(_methodParameterTypes84, parameterTypes)) {
+		if (_methodName86.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes86, parameterTypes)) {
 			SyncDLObjectLocalServiceUtil.setBeanIdentifier((java.lang.String)arguments[0]);
-
-			return null;
-		}
-
-		if (_methodName89.equals(name) &&
-				Arrays.deepEquals(_methodParameterTypes89, parameterTypes)) {
-			return SyncDLObjectLocalServiceUtil.addSyncDLObject(((Long)arguments[0]).longValue(),
-				((Long)arguments[1]).longValue(),
-				((Long)arguments[2]).longValue(),
-				((Long)arguments[3]).longValue(),
-				(java.lang.String)arguments[4], (java.lang.String)arguments[5],
-				(java.lang.String)arguments[6], (java.lang.String)arguments[7],
-				(java.lang.String)arguments[8], (java.lang.String)arguments[9],
-				(java.lang.String)arguments[10],
-				((Long)arguments[11]).longValue(),
-				((Long)arguments[12]).longValue(),
-				(java.lang.String)arguments[13],
-				(java.lang.String)arguments[14], (java.util.Date)arguments[15],
-				((Long)arguments[16]).longValue(),
-				(java.lang.String)arguments[17],
-				(java.lang.String)arguments[18],
-				((Long)arguments[19]).longValue(),
-				(java.lang.String)arguments[20]);
-		}
-
-		if (_methodName90.equals(name) &&
-				Arrays.deepEquals(_methodParameterTypes90, parameterTypes)) {
-			SyncDLObjectLocalServiceUtil.deleteSyncDLObjects((java.lang.String)arguments[0],
-				(java.lang.String)arguments[1]);
 
 			return null;
 		}
 
 		if (_methodName91.equals(name) &&
 				Arrays.deepEquals(_methodParameterTypes91, parameterTypes)) {
-			return SyncDLObjectLocalServiceUtil.fetchSyncDLObject((java.lang.String)arguments[0],
-				((Long)arguments[1]).longValue());
+			return SyncDLObjectLocalServiceUtil.addSyncDLObject(((Long)arguments[0]).longValue(),
+				((Long)arguments[1]).longValue(),
+				(java.lang.String)arguments[2],
+				((Long)arguments[3]).longValue(),
+				((Long)arguments[4]).longValue(),
+				((Long)arguments[5]).longValue(),
+				(java.lang.String)arguments[6], (java.lang.String)arguments[7],
+				(java.lang.String)arguments[8], (java.lang.String)arguments[9],
+				(java.lang.String)arguments[10],
+				(java.lang.String)arguments[11],
+				(java.lang.String)arguments[12],
+				((Long)arguments[13]).longValue(),
+				((Long)arguments[14]).longValue(),
+				(java.lang.String)arguments[15],
+				(java.lang.String)arguments[16], (java.util.Date)arguments[17],
+				((Long)arguments[18]).longValue(),
+				(java.lang.String)arguments[19],
+				(java.lang.String)arguments[20],
+				((Long)arguments[21]).longValue(),
+				(java.lang.String)arguments[22]);
 		}
 
 		if (_methodName92.equals(name) &&
 				Arrays.deepEquals(_methodParameterTypes92, parameterTypes)) {
+			SyncDLObjectLocalServiceUtil.deleteSyncDLObjects((java.lang.String)arguments[0],
+				(java.lang.String)arguments[1]);
+
+			return null;
+		}
+
+		if (_methodName93.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes93, parameterTypes)) {
+			return SyncDLObjectLocalServiceUtil.fetchSyncDLObject((java.lang.String)arguments[0],
+				((Long)arguments[1]).longValue());
+		}
+
+		if (_methodName94.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes94, parameterTypes)) {
 			return SyncDLObjectLocalServiceUtil.getLatestModifiedTime();
+		}
+
+		if (_methodName95.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes95, parameterTypes)) {
+			return SyncDLObjectLocalServiceUtil.getSyncDLObjects(((Long)arguments[0]).longValue(),
+				((Long)arguments[1]).longValue());
 		}
 
 		throw new UnsupportedOperationException();
@@ -343,16 +356,18 @@ public class SyncDLObjectLocalServiceClpInvoker {
 	private String[] _methodParameterTypes17;
 	private String _methodName18;
 	private String[] _methodParameterTypes18;
-	private String _methodName83;
-	private String[] _methodParameterTypes83;
-	private String _methodName84;
-	private String[] _methodParameterTypes84;
-	private String _methodName89;
-	private String[] _methodParameterTypes89;
-	private String _methodName90;
-	private String[] _methodParameterTypes90;
+	private String _methodName85;
+	private String[] _methodParameterTypes85;
+	private String _methodName86;
+	private String[] _methodParameterTypes86;
 	private String _methodName91;
 	private String[] _methodParameterTypes91;
 	private String _methodName92;
 	private String[] _methodParameterTypes92;
+	private String _methodName93;
+	private String[] _methodParameterTypes93;
+	private String _methodName94;
+	private String[] _methodParameterTypes94;
+	private String _methodName95;
+	private String[] _methodParameterTypes95;
 }

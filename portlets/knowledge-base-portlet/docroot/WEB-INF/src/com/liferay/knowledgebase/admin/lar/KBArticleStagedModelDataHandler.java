@@ -27,13 +27,7 @@ import com.liferay.knowledgebase.util.PortletKeys;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.portal.kernel.lar.BaseStagedModelDataHandler;
-import com.liferay.portal.kernel.lar.ExportImportPathUtil;
-import com.liferay.portal.kernel.lar.PortletDataContext;
-import com.liferay.portal.kernel.lar.StagedModelDataHandlerUtil;
-import com.liferay.portal.kernel.lar.StagedModelModifiedDateComparator;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -43,6 +37,11 @@ import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.util.PortalUtil;
 import com.liferay.portlet.documentlibrary.DuplicateFileException;
 import com.liferay.portlet.documentlibrary.model.DLFileEntry;
+import com.liferay.portlet.exportimport.lar.BaseStagedModelDataHandler;
+import com.liferay.portlet.exportimport.lar.ExportImportPathUtil;
+import com.liferay.portlet.exportimport.lar.PortletDataContext;
+import com.liferay.portlet.exportimport.lar.StagedModelDataHandlerUtil;
+import com.liferay.portlet.exportimport.lar.StagedModelModifiedDateComparator;
 
 import java.io.InputStream;
 
@@ -58,6 +57,11 @@ public class KBArticleStagedModelDataHandler
 	public static final String[] CLASS_NAMES = {KBArticle.class.getName()};
 
 	@Override
+	public void deleteStagedModel(KBArticle kbArticle) throws PortalException {
+		KBArticleLocalServiceUtil.deleteKBArticle(kbArticle);
+	}
+
+	@Override
 	public void deleteStagedModel(
 			String uuid, long groupId, String className, String extraData)
 		throws PortalException {
@@ -65,24 +69,8 @@ public class KBArticleStagedModelDataHandler
 		KBArticle kbArticle = fetchStagedModelByUuidAndGroupId(uuid, groupId);
 
 		if (kbArticle != null) {
-			KBArticleLocalServiceUtil.deleteKBArticle(kbArticle);
+			deleteStagedModel(kbArticle);
 		}
-	}
-
-	@Override
-	public KBArticle fetchStagedModelByUuidAndCompanyId(
-		String uuid, long companyId) {
-
-		List<KBArticle> kbArticles =
-			KBArticleLocalServiceUtil.getKBArticlesByUuidAndCompanyId(
-				uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new StagedModelModifiedDateComparator<KBArticle>());
-
-		if (ListUtil.isEmpty(kbArticles)) {
-			return null;
-		}
-
-		return kbArticles.get(0);
 	}
 
 	@Override
@@ -91,6 +79,15 @@ public class KBArticleStagedModelDataHandler
 
 		return KBArticleLocalServiceUtil.fetchKBArticleByUuidAndGroupId(
 			uuid, groupId);
+	}
+
+	@Override
+	public List<KBArticle> fetchStagedModelsByUuidAndCompanyId(
+		String uuid, long companyId) {
+
+		return KBArticleLocalServiceUtil.getKBArticlesByUuidAndCompanyId(
+			uuid, companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			new StagedModelModifiedDateComparator<KBArticle>());
 	}
 
 	@Override

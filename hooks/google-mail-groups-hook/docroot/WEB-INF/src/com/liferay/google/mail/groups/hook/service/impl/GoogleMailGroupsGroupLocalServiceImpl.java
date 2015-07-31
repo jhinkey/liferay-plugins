@@ -14,7 +14,7 @@
 
 package com.liferay.google.mail.groups.hook.service.impl;
 
-import com.liferay.google.mail.groups.util.GoogleDirectoryUtil;
+import com.liferay.google.apps.connector.util.GoogleDirectoryUtil;
 import com.liferay.google.mail.groups.util.GoogleMailGroupsUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -130,7 +130,8 @@ public class GoogleMailGroupsGroupLocalServiceImpl
 					new LinkedHashMap<>();
 
 				userParams.put("inherit", Boolean.TRUE);
-				userParams.put("usersGroups", new Long(_group.getGroupId()));
+				userParams.put(
+					"usersGroups", Long.valueOf(_group.getGroupId()));
 
 				List<User> users = UserLocalServiceUtil.search(
 					_group.getCompanyId(), null,

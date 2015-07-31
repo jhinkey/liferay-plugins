@@ -15,10 +15,13 @@
 package com.liferay.sync.filter;
 
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PortalUtil;
+import com.liferay.sync.SyncClientMinBuildException;
+import com.liferay.sync.SyncDeviceHeaderException;
 import com.liferay.sync.SyncServicesUnavailableException;
 import com.liferay.sync.util.PortletPropsKeys;
 import com.liferay.sync.util.PortletPropsValues;
@@ -62,14 +65,61 @@ public class SyncJSONFilter implements Filter {
 		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)servletRequest;
 
+		if (ParamUtil.get(httpServletRequest, "debug", false)) {
+			filterChain.doFilter(servletRequest, servletResponse);
+
+			return;
+		}
+
+		Throwable throwable = null;
+
 		if (PrefsPropsUtil.getBoolean(
 				PortalUtil.getCompanyId(httpServletRequest),
 				PortletPropsKeys.SYNC_SERVICES_ENABLED,
 				PortletPropsValues.SYNC_SERVICES_ENABLED)) {
 
-			filterChain.doFilter(servletRequest, servletResponse);
+			String syncDevice = httpServletRequest.getHeader("Sync-Device");
 
-			return;
+			if (syncDevice == null) {
+				throwable = new SyncDeviceHeaderException();
+			}
+			else if (syncDevice.startsWith("desktop")) {
+				int syncBuild = httpServletRequest.getIntHeader("Sync-Build");
+
+				int syncClientDesktopMinBuild = PrefsPropsUtil.getInteger(
+					PortalUtil.getCompanyId(httpServletRequest),
+					PortletPropsKeys.SYNC_CLIENT_DESKTOP_MIN_BUILD,
+					PortletPropsValues.SYNC_CLIENT_DESKTOP_MIN_BUILD);
+
+				if (syncClientDesktopMinBuild <
+						_ABSOLUTE_SYNC_CLIENT_DESKTOP_MIN_BUILD) {
+
+					syncClientDesktopMinBuild =
+						_ABSOLUTE_SYNC_CLIENT_DESKTOP_MIN_BUILD;
+				}
+
+				if (syncBuild >= syncClientDesktopMinBuild) {
+					filterChain.doFilter(servletRequest, servletResponse);
+
+					return;
+				}
+				else {
+					throwable = new SyncClientMinBuildException(
+						"Sync client does not meet minimum build " +
+							syncClientDesktopMinBuild);
+				}
+			}
+			else if (syncDevice.startsWith("mobile")) {
+				filterChain.doFilter(servletRequest, servletResponse);
+
+				return;
+			}
+			else {
+				throwable = new SyncDeviceHeaderException();
+			}
+		}
+		else {
+			throwable = new SyncServicesUnavailableException();
 		}
 
 		servletResponse.setCharacterEncoding(StringPool.UTF8);
@@ -77,8 +127,7 @@ public class SyncJSONFilter implements Filter {
 
 		OutputStream outputStream = servletResponse.getOutputStream();
 
-		String json = SyncUtil.buildExceptionMessage(
-			new SyncServicesUnavailableException());
+		String json = SyncUtil.buildExceptionMessage(throwable);
 
 		json = "{\"exception\": \"" + json + "\"}";
 
@@ -90,5 +139,7 @@ public class SyncJSONFilter implements Filter {
 	@Override
 	public void init(FilterConfig filterConfig) {
 	}
+
+	private static final int _ABSOLUTE_SYNC_CLIENT_DESKTOP_MIN_BUILD = 3009;
 
 }

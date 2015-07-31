@@ -15,7 +15,6 @@
 		<attribute name="service.auto.namespace.tables" default="true" />
 		<attribute name="service.hbm.file.name" default="portlet-hbm.xml" />
 		<attribute name="service.model.hints.file.name" default="portlet-model-hints.xml" />
-		<attribute name="service.props.util" default="com.liferay.util.service.ServiceProps" />
 		<attribute name="service.spring.file.name" default="portlet-spring.xml" />
 		<attribute name="service.sql.dir" />
 		<attribute name="service.test.dir" />
@@ -35,11 +34,13 @@
 				<available file="bnd.bnd" />
 				<then>
 					<var name="service.osgi.module" value="true" />
+					<var name="service.props.util" value="${plugin.name}.util.ServiceProps" />
 					<var name="service.plugin.name" value="" />
-					<var name="service.spring.namespaces" value="beans,osgi" />
+					<var name="service.spring.namespaces" value="beans" />
 				</then>
 				<else>
 					<var name="service.osgi.module" value="false" />
+					<var name="service.props.util" value="com.liferay.util.service.ServiceProps" />
 					<var name="service.plugin.name" value="${plugin.name}" />
 					<var name="service.spring.namespaces" value="beans" />
 				</else>
@@ -56,13 +57,9 @@
 				<fileset dir="${service.base.dir}/src" excludes="**/*.java" />
 			</copy>
 
-			<path id="service.classpath">
-				<path refid="lib.classpath" />
-				<path refid="portal.classpath" />
-				<fileset dir="${app.server.lib.portal.dir}" includes="commons-digester.jar,commons-lang.jar,easyconf.jar" />
-				<fileset dir="${sdk.dir}/dependencies/org.freemarker/lib" includes="*.jar" />
+			<path id="service.builder.classpath">
+				<fileset dir="${sdk.dir}/dependencies/com.liferay.portal.tools.service.builder/lib" includes="*.jar" />
 				<fileset dir="${service.base.dir}/lib" includes="*.jar" />
-				<pathelement location="${sdk.dir}/misc" />
 				<pathelement location="${service.base.dir}/classes" />
 			</path>
 
@@ -70,8 +67,8 @@
 				<os family="windows" />
 				<then>
 					<classpath-to-jar
-						classpathref="service.classpath"
-						jarfile="build-service-classpath.jar"
+						classpathref="service.builder.classpath"
+						jarfile="service-builder-classpath.jar"
 					/>
 				</then>
 			</if>
@@ -86,8 +83,8 @@
 			</if>
 
 			<java
-				classname="com.liferay.portal.tools.servicebuilder.ServiceBuilder"
-				classpathref="service.classpath"
+				classname="com.liferay.portal.tools.service.builder.ServiceBuilder"
+				classpathref="service.builder.classpath"
 				fork="true"
 				newenvironment="true"
 				outputproperty="build-service.output"
@@ -109,7 +106,7 @@
 				<arg value="service.model.hints.file=${basedir}/${service.base.dir}/src/META-INF/@{service.model.hints.file.name}" />
 				<arg value="service.osgi.module=${service.osgi.module}" />
 				<arg value="service.plugin.name=${service.plugin.name}" />
-				<arg value="service.props.util=@{service.props.util}" />
+				<arg value="service.props.util=${service.props.util}" />
 				<arg value="service.remoting.file=" />
 				<arg value="service.resources.dir=${basedir}/${service.base.dir}/src" />
 				<arg value="service.spring.file=${basedir}/${service.base.dir}/src/META-INF/@{service.spring.file.name}" />
@@ -125,7 +122,7 @@
 			<if>
 				<os family="windows" />
 				<then>
-					<delete file="build-service-classpath.jar" />
+					<delete file="service-builder-classpath.jar" />
 				</then>
 			</if>
 
@@ -192,6 +189,176 @@
 		</sequential>
 	</macrodef>
 
+	<macrodef name="compile-jsp">
+		<attribute name="compile.jsp.docroot.dir" />
+		<attribute name="compile.jsp.temp.dir" default="" />
+
+		<sequential>
+			<if>
+				<not>
+					<equals arg1="${app.server.type}" arg2="tomcat" />
+				</not>
+				<then>
+					<fail>Compiling JSPs with ${app.server.type} is not supported.</fail>
+				</then>
+			</if>
+
+			<if>
+				<available file="@{compile.jsp.docroot.dir}" />
+				<then>
+					<var name="compile.jsp.dependencies.classpath" />
+
+					<if>
+						<isset property="osgi.compile.jsp.wab.dependencies" />
+						<then>
+							<for list="${osgi.compile.jsp.wab.dependencies}" param="osgi.compile.jsp.wab.dependency">
+								<sequential>
+									<var name="compile.jsp.dependency.dir" value="${basedir}/../@{osgi.compile.jsp.wab.dependency}" />
+
+									<compile module.dir="${compile.jsp.dependency.dir}" />
+
+									<if>
+										<equals arg1="${compile.jsp.dependencies.classpath}" arg2="" />
+										<then>
+											<var name="compile.jsp.dependencies.classpath" value="${compile.jsp.dependency.dir}/docroot/WEB-INF/classes" />
+										</then>
+										<else>
+											<var name="compile.jsp.dependencies.classpath" value="${compile.jsp.dependencies.classpath}:${compile.jsp.dependency.dir}/docroot/WEB-INF/classes" />
+										</else>
+									</if>
+
+									<var name="compile.jsp.dependency.dir" unset="true" />
+								</sequential>
+							</for>
+						</then>
+					</if>
+
+					<path id="jspc.classpath.common">
+						<pathelement location="${env.JAVA_HOME}/jre/lib/rt.jar" />
+						<fileset dir="${app.server.lib.global.dir}" includes="*.jar" />
+						<fileset dir="${sdk.dir}/dependencies/com.liferay.jasper.jspc/lib" includes="*.jar" />
+						<pathelement location="${app.server.lib.portal.dir}/ant.jar" />
+						<pathelement path="${compile.jsp.dependencies.classpath}" />
+						<fileset dir="${basedir}" includes="lib/*.jar" />
+						<fileset dir="${basedir}" includes="docroot/WEB-INF/lib/*.jar" />
+						<fileset dir="@{compile.jsp.docroot.dir}" includes="WEB-INF/lib/*.jar" />
+					</path>
+
+					<var name="compile.jsp.dependencies.classpath" unset="true" />
+
+					<local name="jspc.module.web" />
+
+					<if>
+						<equals arg1="@{compile.jsp.temp.dir}" arg2="" />
+						<then>
+							<path id="jspc.classpath">
+								<path refid="jspc.classpath.common" />
+								<pathelement location="@{compile.jsp.docroot.dir}/WEB-INF/classes" />
+							</path>
+
+							<property name="jspc.module.web" value="false" />
+						</then>
+						<else>
+							<path id="jspc.classpath.module.common">
+								<path refid="jspc.classpath.common" />
+								<fileset dir="${app.server.lib.portal.dir}" includes="*.jar" />
+								<fileset dir="${module.framework.base.dir}/modules" includes="*.jar" />
+								<pathelement location="@{compile.jsp.temp.dir}" />
+							</path>
+
+							<if>
+								<available file="@{compile.jsp.docroot.dir}/WEB-INF" type="dir" />
+								<then>
+									<path id="jspc.classpath">
+										<path refid="jspc.classpath.module.common" />
+										<pathelement location="@{compile.jsp.docroot.dir}/WEB-INF/classes" />
+									</path>
+								</then>
+								<else>
+									<path id="jspc.classpath">
+										<path refid="jspc.classpath.module.common" />
+									</path>
+								</else>
+							</if>
+
+							<property name="jspc.module.web" value="true" />
+						</else>
+					</if>
+
+					<delete dir="classes/tomcat" quiet="true" />
+
+					<java
+						classname="com.liferay.jasper.jspc.JspC"
+						classpathref="jspc.classpath"
+						fork="true"
+						jvm="${env.JAVA_HOME}/bin/java"
+						newenvironment="true"
+						outputproperty="jspc.output"
+					>
+						<sysproperty key="jspc.module.web" value="${jspc.module.web}" />
+						<sysproperty key="jspc.portal.dir" value="${app.server.portal.dir}" />
+						<arg line="-d classes/tomcat -webapp @{compile.jsp.docroot.dir}" />
+					</java>
+
+					<echo>${jspc.output}</echo>
+
+					<if>
+						<contains string="${jspc.output}" substring="JasperException" />
+						<then>
+							<delete dir="classes/tomcat" quiet="true" />
+
+							<fail>JSPs failed to compile.</fail>
+						</then>
+					</if>
+
+					<if>
+						<available file="classes/tomcat" type="dir" />
+						<then>
+							<delete file="${sdk.dir}/jspc.javac.output.txt" />
+
+							<record action="start" name="${sdk.dir}/jspc.javac.output.txt" />
+
+							<javac
+								classpathref="jspc.classpath"
+								compiler="${javac.compiler}"
+								deprecation="${javac.deprecation}"
+								destdir="classes/tomcat"
+								encoding="${javac.encoding}"
+								errorProperty="jspc.javac.fail"
+								failonerror="false"
+								includeAntRuntime="false"
+								nowarn="on"
+								srcdir="classes/tomcat"
+							/>
+
+							<record action="stop" name="${sdk.dir}/jspc.javac.output.txt" />
+
+							<loadfile property="jspc.javac.output.txt.content" srcfile="${sdk.dir}/jspc.javac.output.txt" />
+
+							<delete file="${sdk.dir}/jspc.javac.output.txt" />
+
+							<if>
+								<matches string="${jspc.javac.output.txt.content}" pattern="error: package .* does not exist" />
+								<then>
+									<fail>JSPs failed to compile. Please check whether all dependencies modules are deployed.</fail>
+								</then>
+							</if>
+
+							<delete dir="classes/tomcat" quiet="true" />
+						</then>
+					</if>
+
+					<if>
+						<istrue value="${jspc.javac.fail}" />
+						<then>
+							<fail>JSPs failed to compile.</fail>
+						</then>
+					</if>
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<target name="all">
 		<antcall target="clean" />
 		<antcall target="deploy" />
@@ -236,23 +403,6 @@
 		<delete dir="docroot/WEB-INF/client/src" />
 	</target>
 
-	<target name="build-db">
-		<java
-			classname="com.liferay.portal.tools.DBBuilder"
-			classpathref="portal.classpath"
-			fork="true"
-			maxmemory="384m"
-			newenvironment="true"
-		>
-			<arg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
-			<arg value="db.database.name=${database.name}" />
-			<arg value="db.database.types=${database.types}" />
-			<arg value="db.sql.dir=docroot/WEB-INF/sql" />
-		</java>
-
-		<delete file="velocity.log" quiet="true" />
-	</target>
-
 	<target name="build-lang">
 		<if>
 			<available file="docroot/WEB-INF/src/content" />
@@ -278,13 +428,17 @@
 	</target>
 
 	<target name="build-lang-cmd">
+		<path id="lang.builder.classpath">
+			<fileset dir="${sdk.dir}/dependencies/com.liferay.lang.builder/lib" includes="*.jar" />
+			<path refid="portal.classpath" />
+		</path>
+
 		<java
-			classname="com.liferay.portal.tools.LangBuilder"
-			classpathref="portal.classpath"
+			classname="com.liferay.lang.builder.LangBuilder"
+			classpathref="lang.builder.classpath"
 			fork="true"
 			newenvironment="true"
 		>
-			<jvmarg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
 			<jvmarg value="-Dfile.encoding=UTF-8" />
 			<jvmarg value="-Duser.country=US" />
 			<jvmarg value="-Duser.language=en" />
@@ -292,6 +446,8 @@
 			<arg value="lang.file=${lang.file}" />
 			<arg value="lang.plugin=true" />
 			<arg value="lang.translate=${lang.translate}" />
+			<arg value="lang.translate.client.id=${microsoft.translator.client.id}" />
+			<arg value="lang.translate.client.secret=${microsoft.translator.client.secret}" />
 		</java>
 
 		<copy file="${lang.dir}/${lang.file}.properties" tofile="${lang.dir}/${lang.file}_en.properties" />
@@ -343,8 +499,8 @@
 			target.name="compile"
 		/>
 
-		<path id="wsdd.classpath">
-			<path refid="lib.classpath" />
+		<path id="wsdd.builder.classpath">
+			<fileset dir="${sdk.dir}/dependencies/com.liferay.portal.tools.wsdd.builder/lib" includes="*.jar" />
 			<path refid="portal.classpath" />
 			<fileset dir="${plugin.lib.dir}" includes="*.jar" />
 			<pathelement location="${plugin.classes.dir}" />
@@ -354,15 +510,15 @@
 			<os family="windows" />
 			<then>
 				<classpath-to-jar
-					classpathref="wsdd.classpath"
-					jarfile="build-wsdd-classpath.jar"
+					classpathref="wsdd.builder.classpath"
+					jarfile="wsdd-builder-classpath.jar"
 				/>
 			</then>
 		</if>
 
 		<java
-			classname="com.liferay.portal.tools.WSDDBuilder"
-			classpathref="wsdd.classpath"
+			classname="com.liferay.portal.tools.wsdd.builder.WSDDBuilder"
+			classpathref="wsdd.builder.classpath"
 			fork="true"
 			maxmemory="256m"
 			newenvironment="true"
@@ -379,7 +535,7 @@
 		<if>
 			<os family="windows" />
 			<then>
-				<delete file="build-wsdd-classpath.jar" />
+				<delete file="wsdd-builder-classpath.jar" />
 			</then>
 		</if>
 
@@ -401,6 +557,7 @@
 Bundle-Name: ${bnd.Bundle-Name} WSDD descriptors
 Bundle-Version: ${bnd.Bundle-Version}
 Fragment-Host: ${bnd.Bundle-SymbolicName}
+Import-Package: javax.servlet,javax.servlet.http
 Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 				</echo>
 
@@ -425,96 +582,6 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 		</if>
 	</target>
 
-	<target name="build-wsdl">
-		<for param="wsdl.full.path">
-			<path>
-				<fileset dir="." includes="docroot/WEB-INF/wsdl/*.wsdl" />
-			</path>
-			<sequential>
-				<tstamp>
-					<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
-				</tstamp>
-
-				<mkdir dir="${tstamp.value}" />
-
-				<taskdef classpathref="portal.classpath" resource="axis-tasks.properties" />
-
-				<axis-wsdl2java
-					output="${tstamp.value}"
-					url="@{wsdl.full.path}"
-				/>
-
-				<compile-java
-					javac.classpathref="plugin.classpath"
-					javac.destdir="${tstamp.value}"
-					javac.srcdir="${tstamp.value}"
-				/>
-
-				<antelope:stringutil string="@{wsdl.full.path}" property="wsdl.name.beginindex">
-					<antelope:lastindexof string="${file.separator}" />
-				</antelope:stringutil>
-
-				<antelope:math
-					datatype="int"
-					operand1="${wsdl.name.beginindex}"
-					operand2="1"
-					operation="+"
-					result="wsdl.name.beginindex"
-				/>
-
-				<antelope:stringutil string="@{wsdl.full.path}" property="wsdl.file">
-					<antelope:substring beginindex="${wsdl.name.beginindex}" />
-				</antelope:stringutil>
-
-				<antelope:stringutil string="@{wsdl.full.path}" property="wsdl.name.endindex">
-					<antelope:lastindexof string="." />
-				</antelope:stringutil>
-
-				<antelope:stringutil string="@{wsdl.full.path}" property="wsdl.name">
-					<antelope:substring beginindex="${wsdl.name.beginindex}" endindex="${wsdl.name.endindex}" />
-				</antelope:stringutil>
-
-				<jar
-					basedir="${tstamp.value}"
-					jarfile="docroot/WEB-INF/lib/${wsdl.name}-ws.jar"
-				/>
-
-				<delete dir="${tstamp.value}" />
-			</sequential>
-		</for>
-	</target>
-
-	<target name="build-xsd">
-		<tstamp>
-			<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
-		</tstamp>
-
-		<mkdir dir="${tstamp.value}" />
-
-		<path id="plugin-lib.classpath">
-			<fileset dir="${app.server.lib.portal.dir}" includes="xbean.jar" />
-			<fileset dir="docroot/WEB-INF/lib" includes="*.jar" />
-			<pathelement location="docroot/WEB-INF/classes" />
-		</path>
-
-		<taskdef classname="org.apache.xmlbeans.impl.tool.XMLBean" classpathref="portal.classpath" name="xmlbean" />
-
-		<xmlbean
-			classgendir="${tstamp.value}"
-			classpathref="plugin-lib.classpath"
-			srcgendir="${tstamp.value}"
-		>
-			<fileset dir="docroot/WEB-INF/xsd" includes="**/*.*" />
-		</xmlbean>
-
-		<zip
-			basedir="${tstamp.value}"
-			destfile="docroot/WEB-INF/lib/${plugin.name}-xbean.jar"
-		/>
-
-		<delete dir="${tstamp.value}" />
-	</target>
-
 	<target name="compile-import-shared">
 		<compile-import-shared
 			module.dir="${basedir}"
@@ -522,84 +589,73 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 	</target>
 
 	<target name="compile-jsp">
-		<antcall target="compile" />
-
 		<if>
-			<not>
-				<equals arg1="${app.server.type}" arg2="tomcat" />
-			</not>
+			<resourcecount count="0" when="gt">
+				<fileset
+					dir="${basedir}"
+					excludes="**/custom_jsps/**/*,**/dependencies/**/*"
+					includes="docroot/**/*.jsp,src/META-INF/resources/**/*.jsp,tmp/**/*.jsp"
+				/>
+			</resourcecount>
 			<then>
-				<fail>Compiling JSPs with ${app.server.type} is not supported.</fail>
-			</then>
-		</if>
+				<set-module-properties
+					module.dir="${basedir}"
+				/>
 
-		<property name="jspc.classes.dir" value="classes/${app.server.type}" />
+				<if>
+					<isset property="compile.jsp.docroot.dir" />
+					<then>
+						<compile
+							module.dir="${basedir}"
+						/>
 
-		<if>
-			<and>
-				<equals arg1="${app.server.type}" arg2="tomcat" />
-				<equals arg1="${ant.java.version}" arg2="1.5" />
-			</and>
-			<then>
-				<var name="jspc.java.home" value="${jdk.windows.home}" />
-			</then>
-			<else>
-				<var name="jspc.java.home" value="${env.JAVA_HOME}" />
-			</else>
-		</if>
+						<compile-jsp
+							compile.jsp.docroot.dir="${compile.jsp.docroot.dir}"
+						/>
+					</then>
+					<elseif>
+						<available file="bnd.bnd" type="file" />
+						<then>
+							<antcall target="jar">
+								<param name="plugins.includes.path" value="${basedir}" />
+							</antcall>
 
-		<path id="jspc.classpath">
-			<pathelement location="${jspc.java.home}/jre/lib/rt.jar" />
-			<fileset dir="${app.server.lib.global.dir}" includes="*.jar" />
-			<fileset dir="${sdk.dir}/dependencies/com.liferay.jasper.jspc/lib" includes="*.jar" />
-			<pathelement location="${app.server.lib.portal.dir}/ant.jar" />
-			<pathelement location="docroot/WEB-INF/classes" />
-			<fileset dir="docroot/WEB-INF/lib" includes="*.jar" />
-		</path>
+							<tstamp>
+								<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
+							</tstamp>
 
-		<delete dir="${jspc.classes.dir}" quiet="true" />
+							<unzip dest="${tstamp.value}" src="${plugin.file}" />
 
-		<java
-			classname="com.liferay.jasper.jspc.JspC"
-			classpathref="jspc.classpath"
-			fork="true"
-			jvm="${jspc.java.home}/bin/java"
-			newenvironment="true"
-			outputproperty="jspc.output"
-		>
-			<arg line="-d ${jspc.classes.dir} -webapp docroot" />
-		</java>
+							<if>
+								<available file="${tstamp.value}/META-INF/resources" type="dir" />
+								<then>
+									<compile-jsp
+										compile.jsp.docroot.dir="${tstamp.value}/META-INF/resources"
+										compile.jsp.temp.dir="${tstamp.value}"
+									/>
+								</then>
+								<else>
+									<compile-jsp
+										compile.jsp.docroot.dir="${tstamp.value}"
+										compile.jsp.temp.dir="${tstamp.value}"
+									/>
+								</else>
+							</if>
 
-		<echo>${jspc.output}</echo>
+							<delete dir="${tstamp.value}" />
+						</then>
+					</elseif>
+					<else>
+						<loop-macrodef-or-target
+							module.dirs="${basedir}"
+							target.name="compile"
+						/>
 
-		<if>
-			<contains string="${jspc.output}" substring="JasperException" />
-			<then>
-				<delete dir="${jspc.classes.dir}" quiet="true" />
-
-				<fail>JSPs failed to compile.</fail>
-			</then>
-		</if>
-
-		<javac
-			classpathref="jspc.classpath"
-			compiler="${javac.compiler}"
-			deprecation="${javac.deprecation}"
-			destdir="${jspc.classes.dir}"
-			encoding="${javac.encoding}"
-			errorProperty="jspc.javac.fail"
-			failonerror="false"
-			includeAntRuntime="false"
-			nowarn="on"
-			srcdir="${jspc.classes.dir}"
-		/>
-
-		<delete dir="${jspc.classes.dir}" quiet="true" />
-
-		<if>
-			<istrue value="${jspc.javac.fail}" />
-			<then>
-				<fail>JSPs failed to compile.</fail>
+						<compile-jsp
+							compile.jsp.docroot.dir="docroot"
+						/>
+					</else>
+				</if>
 			</then>
 		</if>
 	</target>
@@ -623,6 +679,10 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 	</target>
 
 	<target name="format-wsdl">
+		<path id="xml.formatter.classpath">
+			<fileset dir="${sdk.dir}/dependencies/com.liferay.xml.formatter/lib" includes="*.jar" />
+		</path>
+
 		<for param="wsdl.full.path">
 			<path>
 				<fileset
@@ -632,12 +692,11 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 			</path>
 			<sequential>
 				<java
-					classname="com.liferay.portal.tools.XMLFormatter"
-					classpathref="portal.classpath"
+					classname="com.liferay.xml.formatter.XMLFormatter"
+					classpathref="xml.formatter.classpath"
 					fork="true"
 					newenvironment="true"
 				>
-					<jvmarg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
 					<jvmarg value="-Dxml.formatter.file=@{wsdl.full.path}" />
 					<jvmarg value="-Dxml.formatter.strip.comments=true" />
 				</java>
@@ -646,6 +705,10 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 	</target>
 
 	<target name="format-xsd">
+		<path id="xml.formatter.classpath">
+			<fileset dir="${sdk.dir}/dependencies/com.liferay.xml.formatter/lib" includes="*.jar" />
+		</path>
+
 		<for param="xsd.full.path">
 			<path>
 				<fileset
@@ -655,8 +718,8 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 			</path>
 			<sequential>
 				<java
-					classname="com.liferay.portal.tools.XMLFormatter"
-					classpathref="portal.classpath"
+					classname="com.liferay.xml.formatter.XMLFormatter"
+					classpathref="xml.formatter.classpath"
 					fork="true"
 					newenvironment="true"
 				>
@@ -667,6 +730,8 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 			</sequential>
 		</for>
 	</target>
+
+	<target name="install" depends="publish-local-m2-release" />
 
 	<target name="jar-javadoc" depends="javadoc">
 		<jar-javadoc
@@ -753,7 +818,7 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 					</else>
 				</if>
 
-				<for delimiter=":" list="${patch.files}" param="patch.file">
+				<for delimiter="${path.separator}" list="${patch.files}" param="patch.file">
 					<sequential>
 						<echo>Applying patch @{patch.file}.</echo>
 
@@ -764,32 +829,6 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 		</if>
 
 		<var name="patched.file.available" unset="true" />
-	</target>
-
-	<target name="publish-local-m2-release" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="local-m2" />
-		</antcall>
-	</target>
-
-	<target name="publish-local-m2-snapshot" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="local-m2" />
-			<param name="plugin.release.qualifier" value="-SNAPSHOT" />
-		</antcall>
-	</target>
-
-	<target name="publish-remote-m2-release" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="sonatype-m2-release" />
-		</antcall>
-	</target>
-
-	<target name="publish-remote-m2-snapshot" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="sonatype-m2-snapshot" />
-			<param name="plugin.release.qualifier" value="-SNAPSHOT" />
-		</antcall>
 	</target>
 
 	<target name="shrink-zip-cmd">
@@ -824,7 +863,7 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 		<stop-test-app-server />
 	</target>
 
-	<target name="test-class-group" depends="compile,compile-test">
+	<target name="test-class-group">
 		<if>
 			<not>
 				<isset property="test.class.group.index" />
@@ -834,22 +873,140 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 			</then>
 		</if>
 
-		<property file="${lp.portal.project.dir}/test.class.file.names.properties" />
+		<if>
+			<available file="${basedir}/test" type="dir" />
+			<then>
+				<property file="${lp.portal.project.dir}/test.class.file.names.properties" />
 
-		<propertycopy from="TEST_CLASS_GROUP_${test.class.group.index}" name="test.classes" />
+				<propertycopy from="TEST_CLASS_GROUP_${test.class.group.index}" name="test.classes" />
 
-		<test-cmd
-			module.dir="${basedir}"
-			junit.forkmode="perTest"
-			test.class="${test.classes}"
-			test.type="unit"
+				<propertyregex property="test.java.classes"
+					global="true"
+					input="${test.classes}"
+					regexp="\.class"
+					replace=".java"
+				/>
+
+				<if>
+					<and>
+						<or>
+							<not>
+								<isset property="test.type" />
+							</not>
+							<equals arg1="${test.type}" arg2="unit" />
+						</or>
+						<resourcecount count="0" when="gt">
+							<fileset dir="${basedir}/test/unit" erroronmissingdir="false" includes="${test.java.classes}" />
+						</resourcecount>
+					</and>
+					<then>
+						<test-cmd
+							module.dir="${basedir}"
+							junit.forkmode="perTest"
+							test.class="${test.classes}"
+							test.type="unit"
+						/>
+					</then>
+				</if>
+
+				<if>
+					<and>
+						<or>
+							<not>
+								<isset property="test.type" />
+							</not>
+							<equals arg1="${test.type}" arg2="integration" />
+						</or>
+						<resourcecount count="0" when="gt">
+							<fileset dir="${basedir}/test/integration" erroronmissingdir="false" includes="${test.java.classes}" />
+						</resourcecount>
+					</and>
+					<then>
+						<test-cmd
+							module.dir="${basedir}"
+							junit.forkmode="once"
+							test.class="${test.classes}"
+							test.type="integration"
+						/>
+					</then>
+				</if>
+			</then>
+		</if>
+
+		<if>
+			<and>
+				<or>
+					<not>
+						<isset property="test.type" />
+					</not>
+					<equals arg1="${test.type}" arg2="unit" />
+				</or>
+				<equals arg1="${test.class.group.index}" arg2="0" />
+			</and>
+			<then>
+				<antcall target="compile-jsp" />
+			</then>
+		</if>
+	</target>
+
+	<target name="test-package">
+		<if>
+			<not>
+				<isset property="test.package" />
+			</not>
+			<then>
+				<fail>Use "ant test-package -Dtest.package=com.liferay.portal.kernel.util".</fail>
+			</then>
+		</if>
+
+		<propertyregex
+			global="true"
+			input="${test.package}"
+			property="test.package.dir"
+			regexp="\."
+			replace="/"
 		/>
 
 		<test-cmd
 			module.dir="${basedir}"
 			junit.forkmode="once"
-			test.class="${test.classes}"
+			test.class="**/${test.package.dir}/*Test.class"
 			test.type="integration"
 		/>
+
+		<test-cmd
+			module.dir="${basedir}"
+			junit.forkmode="perTest"
+			test.class="**/${test.package.dir}/*Test.class"
+			test.type="unit"
+		/>
+	</target>
+
+	<target name="watch" depends="deploy">
+		<antelope:repeat count="-1" interval="2">
+			<outofdate verbose="true">
+				<sourcefiles>
+					<fileset dir="${basedir}">
+						<include name="**/*.css" />
+						<include name="**/*.ftl" />
+						<include name="**/*.java" />
+						<include name="**/*.jsp" />
+						<include name="**/*.jspf" />
+						<include name="**/*.scss" />
+						<include name="**/*.vm" />
+						<exclude name="**/classes/**" />
+						<exclude name="**/.sass-cache/**" />
+					</fileset>
+				</sourcefiles>
+				<targetfiles>
+					<pathelement location="${plugin.file}" />
+				</targetfiles>
+				<sequential>
+					<deploy
+						module.dir="${basedir}"
+					/>
+				</sequential>
+			</outofdate>
+		</antelope:repeat>
 	</target>
 </project>

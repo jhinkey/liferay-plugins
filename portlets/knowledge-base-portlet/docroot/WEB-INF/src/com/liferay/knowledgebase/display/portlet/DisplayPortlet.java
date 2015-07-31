@@ -207,7 +207,7 @@ public class DisplayPortlet extends BaseKBPortlet {
 			SessionErrors.contains(
 				renderRequest, NoSuchSubscriptionException.class.getName()) ||
 			SessionErrors.contains(
-				renderRequest, PrincipalException.class.getName())) {
+				renderRequest, PrincipalException.getNestedClasses())) {
 
 			include(templatePath + "error.jsp", renderRequest, renderResponse);
 		}
@@ -258,6 +258,10 @@ public class DisplayPortlet extends BaseKBPortlet {
 		if (mvcPath.endsWith("/edit_article.jsp")) {
 			long resourcePrimKey = ParamUtil.getLong(
 				renderRequest, "resourcePrimKey");
+
+			if (resourcePrimKey == 0) {
+				return null;
+			}
 
 			return KBArticleLocalServiceUtil.getLatestKBArticle(
 				resourcePrimKey, WorkflowConstants.STATUS_ANY);

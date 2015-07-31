@@ -36,18 +36,17 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
@@ -67,6 +66,7 @@ import java.io.InputStream;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
+import javax.portlet.PortletPreferences;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
@@ -196,25 +196,17 @@ public abstract class BaseKBPortlet extends MVCPortlet {
 		}
 	}
 
-	public void serveAttachment(
-			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
-		throws Exception {
-
-		long fileEntryId = ParamUtil.getLong(resourceRequest, "fileEntryId");
-
-		FileEntry fileEntry = PortletFileRepositoryUtil.getPortletFileEntry(
-			fileEntryId);
-
-		PortletResponseUtil.sendFile(
-			resourceRequest, resourceResponse, fileEntry.getTitle(),
-			fileEntry.getContentStream(), fileEntry.getMimeType());
-	}
-
 	public void serveKBArticleRSS(
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		if (!PortalUtil.isRSSFeedsEnabled()) {
+		PortletPreferences portletPreferences =
+			resourceRequest.getPreferences();
+
+		boolean enableRss = GetterUtil.getBoolean(
+			portletPreferences.getValue("enableRss", null), true);
+
+		if (!PortalUtil.isRSSFeedsEnabled() || !enableRss) {
 			PortalUtil.sendRSSFeedsDisabledError(
 				resourceRequest, resourceResponse);
 
@@ -249,10 +241,7 @@ public abstract class BaseKBPortlet extends MVCPortlet {
 		try {
 			String resourceID = resourceRequest.getResourceID();
 
-			if (resourceID.equals("attachment")) {
-				serveAttachment(resourceRequest, resourceResponse);
-			}
-			else if (resourceID.equals("kbArticleRSS")) {
+			if (resourceID.equals("kbArticleRSS")) {
 				serveKBArticleRSS(resourceRequest, resourceResponse);
 			}
 		}

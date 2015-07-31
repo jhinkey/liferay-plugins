@@ -15,15 +15,18 @@
 package com.liferay.wsrp.admin.lar;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.lar.BaseStagedModelDataHandler;
-import com.liferay.portal.kernel.lar.ExportImportPathUtil;
-import com.liferay.portal.kernel.lar.PortletDataContext;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.ServiceContext;
+import com.liferay.portlet.exportimport.lar.BaseStagedModelDataHandler;
+import com.liferay.portlet.exportimport.lar.ExportImportPathUtil;
+import com.liferay.portlet.exportimport.lar.PortletDataContext;
 import com.liferay.wsrp.model.WSRPConsumer;
 import com.liferay.wsrp.service.WSRPConsumerLocalServiceUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Michael C. Han
@@ -40,20 +43,33 @@ public class WSRPConsumerStagedModelDataHandler
 
 		Group group = GroupLocalServiceUtil.getGroup(groupId);
 
-		WSRPConsumer wsrpConsumer = fetchStagedModelByUuidAndCompanyId(
-			uuid, group.getCompanyId());
+		WSRPConsumer wsrpConsumer =
+			WSRPConsumerLocalServiceUtil.fetchWSRPConsumerByUuidAndCompanyId(
+				uuid, group.getCompanyId());
 
 		if (wsrpConsumer != null) {
-			WSRPConsumerLocalServiceUtil.deleteWSRPConsumer(wsrpConsumer);
+			deleteStagedModel(wsrpConsumer);
 		}
 	}
 
 	@Override
-	public WSRPConsumer fetchStagedModelByUuidAndCompanyId(
+	public void deleteStagedModel(WSRPConsumer wsrpConsumer)
+		throws PortalException {
+
+		WSRPConsumerLocalServiceUtil.deleteWSRPConsumer(wsrpConsumer);
+	}
+
+	@Override
+	public List<WSRPConsumer> fetchStagedModelsByUuidAndCompanyId(
 		String uuid, long companyId) {
 
-		return WSRPConsumerLocalServiceUtil.fetchWSRPConsumerByUuidAndCompanyId(
-			uuid, companyId);
+		List<WSRPConsumer> wsrpConsumers = new ArrayList<>();
+
+		wsrpConsumers.add(
+			WSRPConsumerLocalServiceUtil.fetchWSRPConsumerByUuidAndCompanyId(
+				uuid, companyId));
+
+		return wsrpConsumers;
 	}
 
 	@Override
@@ -91,8 +107,10 @@ public class WSRPConsumerStagedModelDataHandler
 
 		if (portletDataContext.isDataStrategyMirror()) {
 			WSRPConsumer existingWSRPConsumer =
-				fetchStagedModelByUuidAndCompanyId(
-					wsrpConsumer.getUuid(), portletDataContext.getCompanyId());
+				WSRPConsumerLocalServiceUtil.
+					fetchWSRPConsumerByUuidAndCompanyId(
+						wsrpConsumer.getUuid(),
+						portletDataContext.getCompanyId());
 
 			if (existingWSRPConsumer == null) {
 				serviceContext.setUuid(wsrpConsumer.getUuid());
@@ -122,13 +140,11 @@ public class WSRPConsumerStagedModelDataHandler
 			}
 		}
 		else {
-			importedWSRPConsumer =
-				WSRPConsumerLocalServiceUtil.addWSRPConsumer(
-					portletDataContext.getCompanyId(), null,
-					wsrpConsumer.getName(), wsrpConsumer.getUrl(),
-					wsrpConsumer.getForwardCookies(),
-					wsrpConsumer.getForwardHeaders(),
-					wsrpConsumer.getMarkupCharacterSets(), serviceContext);
+			importedWSRPConsumer = WSRPConsumerLocalServiceUtil.addWSRPConsumer(
+				portletDataContext.getCompanyId(), null, wsrpConsumer.getName(),
+				wsrpConsumer.getUrl(), wsrpConsumer.getForwardCookies(),
+				wsrpConsumer.getForwardHeaders(),
+				wsrpConsumer.getMarkupCharacterSets(), serviceContext);
 		}
 
 		portletDataContext.importClassedModel(

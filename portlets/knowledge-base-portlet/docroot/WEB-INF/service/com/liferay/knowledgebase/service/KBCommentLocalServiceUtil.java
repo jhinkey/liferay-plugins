@@ -231,7 +231,7 @@ public class KBCommentLocalServiceUtil {
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery getExportActionableDynamicQuery(
-		com.liferay.portal.kernel.lar.PortletDataContext portletDataContext) {
+		com.liferay.portlet.exportimport.lar.PortletDataContext portletDataContext) {
 		return getService().getExportActionableDynamicQuery(portletDataContext);
 	}
 
@@ -433,10 +433,11 @@ public class KBCommentLocalServiceUtil {
 	}
 
 	public static com.liferay.knowledgebase.model.KBComment updateStatus(
-		long kbCommentId, int status,
+		long userId, long kbCommentId, int status,
 		com.liferay.portal.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
-		return getService().updateStatus(kbCommentId, status, serviceContext);
+		return getService()
+				   .updateStatus(userId, kbCommentId, status, serviceContext);
 	}
 
 	public static void clearService() {

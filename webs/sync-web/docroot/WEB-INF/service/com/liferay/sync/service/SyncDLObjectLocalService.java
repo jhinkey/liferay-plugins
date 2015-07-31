@@ -49,16 +49,15 @@ public interface SyncDLObjectLocalService extends BaseLocalService,
 	 * Never modify or reference this interface directly. Always use {@link SyncDLObjectLocalServiceUtil} to access the sync d l object local service. Add custom service methods to {@link com.liferay.sync.service.impl.SyncDLObjectLocalServiceImpl} and rerun ServiceBuilder to automatically copy the method declarations to this interface.
 	 */
 	public com.liferay.sync.model.SyncDLObject addSyncDLObject(long companyId,
-		long modifiedTime, long repositoryId, long parentFolderId,
-		java.lang.String name, java.lang.String extension,
-		java.lang.String mimeType, java.lang.String description,
-		java.lang.String changeLog, java.lang.String extraSettings,
-		java.lang.String version, long versionId, long size,
-		java.lang.String checksum, java.lang.String event,
-		java.util.Date lockExpirationDate, long lockUserId,
-		java.lang.String lockUserName, java.lang.String type, long typePK,
-		java.lang.String typeUuid)
-		throws com.liferay.portal.kernel.exception.PortalException;
+		long userId, java.lang.String userName, long modifiedTime,
+		long repositoryId, long parentFolderId, java.lang.String name,
+		java.lang.String extension, java.lang.String mimeType,
+		java.lang.String description, java.lang.String changeLog,
+		java.lang.String extraSettings, java.lang.String version,
+		long versionId, long size, java.lang.String checksum,
+		java.lang.String event, java.util.Date lockExpirationDate,
+		long lockUserId, java.lang.String lockUserName, java.lang.String type,
+		long typePK, java.lang.String typeUuid) throws PortalException;
 
 	/**
 	* Adds the sync d l object to the database. Also notifies the appropriate model listeners.
@@ -85,7 +84,7 @@ public interface SyncDLObjectLocalService extends BaseLocalService,
 	@Override
 	public com.liferay.portal.model.PersistedModel deletePersistedModel(
 		com.liferay.portal.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException;
+		throws PortalException;
 
 	/**
 	* Deletes the sync d l object from the database. Also notifies the appropriate model listeners.
@@ -106,8 +105,7 @@ public interface SyncDLObjectLocalService extends BaseLocalService,
 	*/
 	@com.liferay.portal.kernel.search.Indexable(type = IndexableType.DELETE)
 	public com.liferay.sync.model.SyncDLObject deleteSyncDLObject(
-		long syncDLObjectId)
-		throws com.liferay.portal.kernel.exception.PortalException;
+		long syncDLObjectId) throws PortalException;
 
 	public void deleteSyncDLObjects(java.lang.String version,
 		java.lang.String type);
@@ -201,8 +199,7 @@ public interface SyncDLObjectLocalService extends BaseLocalService,
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.portal.model.PersistedModel getPersistedModel(
-		java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException;
+		java.io.Serializable primaryKeyObj) throws PortalException;
 
 	/**
 	* Returns the sync d l object with the primary key.
@@ -213,8 +210,11 @@ public interface SyncDLObjectLocalService extends BaseLocalService,
 	*/
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public com.liferay.sync.model.SyncDLObject getSyncDLObject(
-		long syncDLObjectId)
-		throws com.liferay.portal.kernel.exception.PortalException;
+		long syncDLObjectId) throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.sync.model.SyncDLObject> getSyncDLObjects(
+		long repositoryId, long parentFolderId);
 
 	/**
 	* Returns a range of all the sync d l objects.

@@ -808,8 +808,7 @@ public class ConsumerPortlet extends GenericPortlet {
 
 			serviceHolder.setRegistrationContext(registrationContext);
 
-			serviceHolderTransientValue = new TransientValue<ServiceHolder>(
-				serviceHolder);
+			serviceHolderTransientValue = new TransientValue<>(serviceHolder);
 
 			portletSession.setAttribute(
 				markupServiceKey, serviceHolderTransientValue,
@@ -1138,14 +1137,16 @@ public class ConsumerPortlet extends GenericPortlet {
 
 		String[] modes = {
 			getWSRPMode(PortletMode.EDIT), getWSRPMode(PortletMode.HELP),
-			getWSRPMode(PortletMode.VIEW)};
+			getWSRPMode(PortletMode.VIEW)
+		};
 
 		mimeRequest.setValidNewModes(modes);
 
 		String[] windowStates = {
 			getWSRPWindowState(WindowState.MAXIMIZED),
 			getWSRPWindowState(WindowState.MINIMIZED),
-			getWSRPWindowState(WindowState.NORMAL)};
+			getWSRPWindowState(WindowState.NORMAL)
+		};
 
 		mimeRequest.setValidNewWindowStates(windowStates);
 

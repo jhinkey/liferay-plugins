@@ -28,7 +28,7 @@
 		boolean actionable = ParamUtil.getBoolean(request, "actionable");
 		%>
 
-		<div class="clearfix user-notifications-container <%= actionable ? "actionable" : "nonactionable" %>">
+		<aui:container cssClass='<%= "user-notifications-container " + (actionable ? "actionable" : "nonactionable") %>'>
 			<aui:row>
 				<aui:col cssClass="nav-bar user-notifications-sidebar" width="<%= 25 %>">
 					<div class="nav">
@@ -88,7 +88,7 @@
 					<div class="hide notifications-configurations"></div>
 				</aui:col>
 			</aui:row>
-		</div>
+		</aui:container>
 
 		<aui:script use="aui-base,liferay-plugin-notifications,liferay-plugin-notifications-list">
 			var notificationsCount = '.nonactionable .count';
@@ -112,8 +112,8 @@
 					notificationsCount: notificationsCount,
 					notificationsNode: '.user-notifications-list .user-notifications',
 					paginationInfoNode: '.pagination .page-info',
-					previousPageNode: '.pagination .previous',
 					portletKey: '<%= portletDisplay.getId() %>',
+					previousPageNode: '.pagination .previous',
 					start: 0
 				}
 			);
@@ -121,9 +121,10 @@
 			new Liferay.Notifications(
 				{
 					baseRenderURL: '<%= PortletURLFactoryUtil.create(request, portletDisplay.getId(), themeDisplay.getPlid(), PortletRequest.RENDER_PHASE) %>',
+					namespace: '<portlet:namespace />',
 					notificationsList: notificationsList
 				}
-			)
+			);
 		</aui:script>
 	</c:otherwise>
 </c:choose>

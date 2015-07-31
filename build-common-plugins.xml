@@ -47,54 +47,59 @@
 					<antelope:substring beginindex="0" endindex="${service.file.index}" />
 				</antelope:stringutil>
 
-				<ant dir="${portlet.dir}" target="build-service" inheritAll="false" />
+				<if>
+					<available file="${portlet.dir}/build.xml" />
+					<then>
+						<ant dir="${portlet.dir}" target="build-service" inheritAll="false" />
+					</then>
+				</if>
 			</sequential>
 		</for>
 	</target>
 
-	<target name="loop-modules">
-		<if>
-			<not>
-				<equals arg1="${plugins.includes}" arg2="" />
-			</not>
-			<then>
-				<for param="module.name">
-					<path>
-						<dirset dir="." excludes="${plugins.excludes}" includes="${plugins.includes}" />
-					</path>
-					<sequential>
-						<antelope:stringutil string="@{module.name}" property="module.name.unix">
-							<antelope:replace regex="\\" replacement="/" />
-						</antelope:stringutil>
-
-						<antelope:grep in="${module.name.unix}" regex="(.*/)(.*)" group="2" property="module.name" />
-
-						<antcall target="${loop.modules.cmd}" />
-					</sequential>
-				</for>
-			</then>
-		</if>
+	<target name="install">
+		<multiroot-subant
+			build.file="build.xml"
+			excludes="${plugins.excludes}"
+			includes="${plugins.includes}"
+			root.dir="${basedir}"
+			target="install"
+		/>
 	</target>
 
 	<target name="setup-eclipse">
-		<antcall target="loop-modules">
-			<param name="loop.modules.cmd" value="setup-eclipse-module" />
-		</antcall>
-	</target>
-
-	<target name="setup-eclipse-module">
-		<ant dir="${module.name}" target="setup-eclipse" inheritAll="false" />
+		<multiroot-subant
+			build.file="build.xml"
+			excludes="${plugins.excludes}"
+			includes="${plugins.includes}"
+			root.dir="${basedir}"
+			target="setup-eclipse"
+		/>
 	</target>
 
 	<target name="test-class-group">
-		<antcall target="loop-modules">
-			<param name="loop.modules.cmd" value="test-class-group-module" />
-		</antcall>
-
-		<stop-test-app-server />
+		<multiroot-subant
+			build.file="build.xml"
+			excludes="${plugins.excludes}"
+			includes="${plugins.includes}"
+			root.dir="${basedir}"
+			target="test-class-group"
+		>
+			<properties>
+				<propertyset>
+					<propertyref name="test.type" />
+				</propertyset>
+			</properties>
+		</multiroot-subant>
 	</target>
 
-	<target name="test-class-group-module">
-		<ant dir="${module.name}" target="test-class-group" inheritAll="false" />
+	<target name="test-package">
+		<multiroot-subant
+			build.file="build.xml"
+			excludes="${plugins.excludes}"
+			includes="${plugins.includes}"
+			root.dir="${basedir}"
+			target="test-package"
+		/>
 	</target>
 </project>

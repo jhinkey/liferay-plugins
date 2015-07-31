@@ -21,11 +21,11 @@
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
-<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
-<%@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
-<%@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
-<%@ taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %>
-<%@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
+taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
+taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
+taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.calendar.model.CalendarBooking" %><%@
 page import="com.liferay.calendar.model.CalendarResource" %><%@
@@ -56,9 +56,9 @@ page import="com.liferay.portal.model.LayoutConstants" %><%@
 page import="com.liferay.portal.model.User" %><%@
 page import="com.liferay.portal.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.util.PortalUtil" %><%@
-page import="com.liferay.portal.util.PortletKeys" %><%@
 page import="com.liferay.portlet.PortletURLFactoryUtil" %><%@
-page import="com.liferay.portlet.eventsdisplay.util.comparator.CalendarBookingTimeComparator" %>
+page import="com.liferay.portlet.eventsdisplay.util.comparator.CalendarBookingTimeComparator" %><%@
+page import="com.liferay.site.my.sites.web.constants.MySitesPortletKeys" %>
 
 <%@ page import="java.text.Format" %>
 

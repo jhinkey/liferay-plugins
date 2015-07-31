@@ -14,6 +14,7 @@
 
 package com.liferay.pushnotifications.sender.apple;
 
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -28,7 +29,7 @@ import com.notnoop.apns.ApnsService;
 import com.notnoop.apns.ApnsServiceBuilder;
 import com.notnoop.apns.PayloadBuilder;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ import java.util.List;
 public class ApplePushNotificationsSender implements PushNotificationsSender {
 
 	@Override
-	public void reset() {
+	public synchronized void reset() {
 		_apnsService = null;
 	}
 
@@ -64,24 +65,53 @@ public class ApplePushNotificationsSender implements PushNotificationsSender {
 		String body = payloadJSONObject.getString(
 			PushNotificationsConstants.KEY_BODY);
 
-		if (body != null) {
+		if (Validator.isNotNull(body)) {
 			builder.alertBody(body);
 		}
 
-		payloadJSONObject.remove(PushNotificationsConstants.KEY_BODY);
+		String bodyLocalizedKey = payloadJSONObject.getString(
+			PushNotificationsConstants.KEY_BODY_LOCALIZED);
 
-		Iterator<String> keys = payloadJSONObject.keys();
-
-		while (keys.hasNext()) {
-			String key = keys.next();
-
-			builder.customField(key, payloadJSONObject.getString(key));
+		if (Validator.isNotNull(bodyLocalizedKey)) {
+			builder.localizedKey(bodyLocalizedKey);
 		}
+
+		JSONArray bodyLocalizedArgumentsJSONArray =
+			payloadJSONObject.getJSONArray(
+				PushNotificationsConstants.KEY_BODY_LOCALIZED_ARGUMENTS);
+
+		if (bodyLocalizedArgumentsJSONArray != null) {
+			List<String> localizedArguments = new ArrayList<>();
+
+			for (int i = 0; i < bodyLocalizedArgumentsJSONArray.length(); i++) {
+				localizedArguments.add(
+					bodyLocalizedArgumentsJSONArray.getString(i));
+			}
+
+			builder.localizedArguments(localizedArguments);
+		}
+
+		String sound = payloadJSONObject.getString(
+			PushNotificationsConstants.KEY_SOUND);
+
+		if (Validator.isNotNull(sound)) {
+			builder.sound(sound);
+		}
+
+		payloadJSONObject.remove(PushNotificationsConstants.KEY_BODY);
+		payloadJSONObject.remove(PushNotificationsConstants.KEY_BODY_LOCALIZED);
+		payloadJSONObject.remove(
+			PushNotificationsConstants.KEY_BODY_LOCALIZED_ARGUMENTS);
+		payloadJSONObject.remove(PushNotificationsConstants.KEY_SOUND);
+
+		builder.customField(
+			PushNotificationsConstants.KEY_PAYLOAD,
+			payloadJSONObject.toString());
 
 		return builder.build();
 	}
 
-	protected ApnsService getApnsService() throws Exception {
+	protected synchronized ApnsService getApnsService() throws Exception {
 		if (_apnsService == null) {
 			ApnsServiceBuilder appleServiceBuilder = APNS.newService();
 
@@ -113,6 +143,9 @@ public class ApplePushNotificationsSender implements PushNotificationsSender {
 
 			if (sandbox) {
 				appleServiceBuilder.withSandboxDestination();
+			}
+			else {
+				appleServiceBuilder.withProductionDestination();
 			}
 
 			_apnsService = appleServiceBuilder.build();

@@ -276,9 +276,8 @@ public class ActivitiesPortlet extends MVCPortlet {
 			}
 			else if (cmd.equals(Constants.EDIT) && (mbMessageId > 0)) {
 				mbMessage = MBMessageServiceUtil.updateDiscussionMessage(
-					className, classPK, className, classPK,
-					themeDisplay.getUserId(), mbMessageId, StringPool.BLANK,
-					body, serviceContext);
+					className, classPK, mbMessageId, StringPool.BLANK, body,
+					serviceContext);
 			}
 			else {
 				MBMessageDisplay mbMessageDisplay =
@@ -293,8 +292,7 @@ public class ActivitiesPortlet extends MVCPortlet {
 				MBMessage rootMBMessage = mbTreeWalker.getRoot();
 
 				mbMessage = MBMessageServiceUtil.addDiscussionMessage(
-					groupId, className, classPK, className, classPK,
-					themeDisplay.getUserId(), mbThread.getThreadId(),
+					groupId, className, classPK, mbThread.getThreadId(),
 					rootMBMessage.getMessageId(), StringPool.BLANK, body,
 					serviceContext);
 			}
@@ -397,10 +395,9 @@ public class ActivitiesPortlet extends MVCPortlet {
 		jsonObject.put(
 			"mbMessageIdOrMicroblogsEntryId", mbMessageIdOrMicroblogsEntryId);
 
-		Format dateFormat =
-			FastDateFormatFactoryUtil.getDate(
-				DateFormat.FULL, themeDisplay.getLocale(),
-				themeDisplay.getTimeZone());
+		Format dateFormat = FastDateFormatFactoryUtil.getDate(
+			DateFormat.FULL, themeDisplay.getLocale(),
+			themeDisplay.getTimeZone());
 
 		jsonObject.put(
 			"modifiedDate",

@@ -37,8 +37,8 @@ import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletPreferences;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Jorge Ferrer
@@ -47,6 +47,18 @@ import javax.portlet.RenderResponse;
  * @author Brian Wing Shun Chan
  */
 public class ConfigurationActionImpl extends DefaultConfigurationAction {
+
+	@Override
+	public String getJspPath(HttpServletRequest request) {
+		String cmd = ParamUtil.getString(request, Constants.CMD);
+
+		if (cmd.equals(Constants.ADD)) {
+			return "/edit_field.jsp";
+		}
+		else {
+			return "/configuration.jsp";
+		}
+	}
 
 	@Override
 	public void processAction(
@@ -192,22 +204,6 @@ public class ConfigurationActionImpl extends DefaultConfigurationAction {
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
-	@Override
-	public String render(
-			PortletConfig portletConfig, RenderRequest renderRequest,
-			RenderResponse renderResponse)
-		throws Exception {
-
-		String cmd = ParamUtil.getString(renderRequest, Constants.CMD);
-
-		if (cmd.equals(Constants.ADD)) {
-			return "/edit_field.jsp";
-		}
-		else {
-			return "/configuration.jsp";
-		}
-	}
-
 	protected void updateModifiedLocales(
 			String parameter, Map<Locale, String> newLocalizationMap,
 			PortletPreferences preferences)
@@ -255,16 +251,29 @@ public class ConfigurationActionImpl extends DefaultConfigurationAction {
 
 			String[] emailAdresses = WebFormUtil.split(
 				getParameter(actionRequest, "emailAddress"));
+			String emailFromAddress = GetterUtil.getString(
+				getParameter(actionRequest, "emailFromAddress"));
 
-			if (emailAdresses.length == 0) {
+			if ((emailAdresses.length == 0) ||
+				Validator.isNull(emailFromAddress)) {
+
 				SessionErrors.add(actionRequest, "emailAddressRequired");
 			}
 
-			for (String emailAdress : emailAdresses) {
-				emailAdress = emailAdress.trim();
+			if (Validator.isNotNull(emailFromAddress) &&
+				!Validator.isEmailAddress(emailFromAddress)) {
 
-				if (!Validator.isEmailAddress(emailAdress)) {
-					SessionErrors.add(actionRequest, "emailAddressInvalid");
+				SessionErrors.add(actionRequest, "emailAddressInvalid");
+			}
+			else {
+				for (String emailAdress : emailAdresses) {
+					emailAdress = emailAdress.trim();
+
+					if (!Validator.isEmailAddress(emailAdress)) {
+						SessionErrors.add(actionRequest, "emailAddressInvalid");
+
+						break;
+					}
 				}
 			}
 		}
