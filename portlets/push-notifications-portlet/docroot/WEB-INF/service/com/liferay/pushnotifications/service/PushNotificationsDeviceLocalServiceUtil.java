@@ -293,6 +293,14 @@ public class PushNotificationsDeviceLocalServiceUtil {
 		return getService().deletePushNotificationsDevice(token);
 	}
 
+	public static java.util.List<com.liferay.pushnotifications.model.PushNotificationsDevice> getPushNotificationsDevices(
+		int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService()
+				   .getPushNotificationsDevices(start, end, orderByComparator);
+	}
+
 	public static void resetPushNotificationSenders() {
 		getService().resetPushNotificationSenders();
 	}
@@ -309,6 +317,23 @@ public class PushNotificationsDeviceLocalServiceUtil {
 		com.liferay.portal.kernel.json.JSONObject payloadJSONObject)
 		throws com.liferay.portal.kernel.exception.PortalException {
 		getService().sendPushNotification(platform, tokens, payloadJSONObject);
+	}
+
+	public static void sendPushNotification(java.lang.String platform,
+		java.util.List<java.lang.String> tokens,
+		com.liferay.portal.kernel.json.JSONObject payloadJSONObject,
+		java.util.Map<java.lang.String, java.lang.Object> configuration)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		getService()
+			.sendPushNotification(platform, tokens, payloadJSONObject,
+			configuration);
+	}
+
+	public static void updateToken(java.lang.String oldToken,
+		java.lang.String newToken)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		getService().updateToken(oldToken, newToken);
 	}
 
 	public static void clearService() {

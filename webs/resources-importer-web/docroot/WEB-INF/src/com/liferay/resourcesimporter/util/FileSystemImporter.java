@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.lar.ExportImportThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -164,16 +165,17 @@ public class FileSystemImporter extends BaseImporter {
 					userId, groupId, classNameId, 0, getKey(fileName),
 					getMap(name), null,
 					DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY,
-					StringPool.BLANK, getDDMTemplateLanguage(name), script,
-					false, false, StringPool.BLANK, null, serviceContext);
+					StringPool.BLANK, getDDMTemplateLanguage(file.getName()),
+					script, true, false, StringPool.BLANK, null,
+					serviceContext);
 			}
 			else {
 				DDMTemplateLocalServiceUtil.updateTemplate(
 					ddmTemplate.getTemplateId(), ddmTemplate.getClassPK(),
 					getMap(name), null,
 					DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY,
-					StringPool.BLANK, getDDMTemplateLanguage(name), script,
-					false, false, StringPool.BLANK, null, serviceContext);
+					StringPool.BLANK, getDDMTemplateLanguage(file.getName()),
+					script, ddmTemplate.getCacheable(), serviceContext);
 			}
 		}
 		catch (PortalException e) {
@@ -244,8 +246,6 @@ public class FileSystemImporter extends BaseImporter {
 		File[] files = listFiles(dir);
 
 		for (File file : files) {
-			String language = getDDMTemplateLanguage(file.getName());
-
 			String script = StringUtil.read(getInputStream(file));
 
 			if (Validator.isNull(script)) {
@@ -254,8 +254,8 @@ public class FileSystemImporter extends BaseImporter {
 
 			addDDMTemplate(
 				groupId, ddmStructure.getStructureId(), file.getName(),
-				language, script, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY,
-				null);
+				getDDMTemplateLanguage(file.getName()), script,
+				DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null);
 		}
 	}
 
@@ -522,15 +522,16 @@ public class FileSystemImporter extends BaseImporter {
 					userId, templateGroupId,
 					PortalUtil.getClassNameId(DDMStructure.class),
 					ddmStructureId, getKey(fileName), getMap(name), null, type,
-					mode, language, script, false, false, StringPool.BLANK,
-					null, serviceContext);
+					mode, language, script, true, false, StringPool.BLANK, null,
+					serviceContext);
 			}
 			else {
 				DDMTemplateLocalServiceUtil.updateTemplate(
 					ddmTemplate.getTemplateId(),
 					PortalUtil.getClassNameId(DDMStructure.class), getMap(name),
 					null, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null,
-					language, script, false, false, null, null, serviceContext);
+					language, script, ddmTemplate.getCacheable(),
+					serviceContext);
 			}
 		}
 		catch (PortalException e) {
@@ -574,6 +575,8 @@ public class FileSystemImporter extends BaseImporter {
 			String ddmStructureKey, String fileName, InputStream inputStream)
 		throws Exception {
 
+		String language = getDDMTemplateLanguage(fileName);
+
 		fileName = FileUtil.stripExtension(fileName);
 
 		String name = getName(fileName);
@@ -613,17 +616,17 @@ public class FileSystemImporter extends BaseImporter {
 					PortalUtil.getClassNameId(DDMStructure.class),
 					ddmStructure.getStructureId(), getKey(fileName),
 					getMap(name), null,
-					DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null,
-					getDDMTemplateLanguage(fileName), replaceFileEntryURL(xsl),
-					false, false, null, null, serviceContext);
+					DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null, language,
+					replaceFileEntryURL(xsl), true, false, null, null,
+					serviceContext);
 			}
 			else {
 				ddmTemplate = DDMTemplateLocalServiceUtil.updateTemplate(
 					ddmTemplate.getTemplateId(),
 					PortalUtil.getClassNameId(DDMStructure.class), getMap(name),
 					null, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null,
-					getDDMTemplateLanguage(fileName), replaceFileEntryURL(xsl),
-					false, false, null, null, serviceContext);
+					language, replaceFileEntryURL(xsl),
+					ddmTemplate.getCacheable(), serviceContext);
 			}
 		}
 		catch (PortalException e) {
@@ -972,10 +975,39 @@ public class FileSystemImporter extends BaseImporter {
 					"layoutPrototypeUuid", layoutPrototypeUuid);
 			}
 
-			Layout layout = LayoutLocalServiceUtil.addLayout(
-				userId, groupId, privateLayout, parentLayoutId, nameMap,
-				titleMap, null, null, null, type, typeSettings, hidden,
-				friendlyURLMap, serviceContext);
+			Layout layout = LayoutLocalServiceUtil.fetchLayoutByFriendlyURL(
+				groupId, privateLayout, friendlyURL);
+
+			if (layout != null) {
+				if (!developerModeEnabled) {
+					if (_log.isInfoEnabled()) {
+						_log.info(
+							"Layout with friendly URL " + friendlyURL +
+								" already exists");
+				}
+
+					return;
+				}
+
+				if (!updateModeEnabled) {
+					LayoutLocalServiceUtil.deleteLayout(layout);
+				}
+			}
+
+			if (!updateModeEnabled || (layout == null)) {
+				layout = LayoutLocalServiceUtil.addLayout(
+					userId, groupId, privateLayout, parentLayoutId, nameMap,
+					titleMap, null, null, null, type, typeSettings, hidden,
+					friendlyURLMap, serviceContext);
+			}
+			else {
+				layout = LayoutLocalServiceUtil.updateLayout(
+					groupId, privateLayout, layout.getLayoutId(),
+					parentLayoutId, nameMap, titleMap,
+					layout.getDescriptionMap(), layout.getKeywordsMap(),
+					layout.getRobotsMap(), type, hidden, friendlyURLMap,
+					layout.getIconImage(), null, serviceContext);
+			}
 
 			LayoutTypePortlet layoutTypePortlet =
 				(LayoutTypePortlet)layout.getLayoutType();
@@ -1054,6 +1086,10 @@ public class FileSystemImporter extends BaseImporter {
 
 		String portletId = layoutTypePortlet.addPortletId(
 			userId, rootPortletId, columnId, -1, false);
+
+		if (portletId == null) {
+			return;
+		}
 
 		JSONObject portletPreferencesJSONObject =
 			portletJSONObject.getJSONObject("portletPreferences");
@@ -1258,6 +1294,11 @@ public class FileSystemImporter extends BaseImporter {
 
 		boolean indexReadOnly = SearchEngineUtil.isIndexReadOnly();
 
+		boolean layoutImportInProcess =
+			ExportImportThreadLocal.isLayoutImportInProcess();
+		boolean portletImportInProcess =
+			ExportImportThreadLocal.isPortletImportInProcess();
+
 		try {
 			SearchEngineUtil.setIndexReadOnly(true);
 
@@ -1266,6 +1307,9 @@ public class FileSystemImporter extends BaseImporter {
 			setUpSitemap("sitemap.json");
 
 			SearchEngineUtil.setIndexReadOnly(false);
+
+			ExportImportThreadLocal.setLayoutImportInProcess(false);
+			ExportImportThreadLocal.setPortletImportInProcess(false);
 
 			long startTime = System.currentTimeMillis();
 
@@ -1283,6 +1327,11 @@ public class FileSystemImporter extends BaseImporter {
 		}
 		finally {
 			SearchEngineUtil.setIndexReadOnly(indexReadOnly);
+
+			ExportImportThreadLocal.setLayoutImportInProcess(
+				layoutImportInProcess);
+			ExportImportThreadLocal.setPortletImportInProcess(
+				portletImportInProcess);
 		}
 	}
 
@@ -1697,11 +1746,13 @@ public class FileSystemImporter extends BaseImporter {
 	}
 
 	protected void setUpSitemap(String fileName) throws Exception {
-		LayoutLocalServiceUtil.deleteLayouts(
-			groupId, true, new ServiceContext());
+		if (!updateModeEnabled) {
+			LayoutLocalServiceUtil.deleteLayouts(
+				groupId, true, new ServiceContext());
 
-		LayoutLocalServiceUtil.deleteLayouts(
-			groupId, false, new ServiceContext());
+			LayoutLocalServiceUtil.deleteLayouts(
+				groupId, false, new ServiceContext());
+		}
 
 		JSONObject jsonObject = getJSONObject(fileName);
 

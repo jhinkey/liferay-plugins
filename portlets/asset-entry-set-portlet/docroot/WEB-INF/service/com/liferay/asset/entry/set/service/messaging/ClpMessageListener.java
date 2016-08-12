@@ -15,7 +15,6 @@
 package com.liferay.asset.entry.set.service.messaging;
 
 import com.liferay.asset.entry.set.service.AssetEntrySetLikeLocalServiceUtil;
-import com.liferay.asset.entry.set.service.AssetEntrySetLikeServiceUtil;
 import com.liferay.asset.entry.set.service.AssetEntrySetLocalServiceUtil;
 import com.liferay.asset.entry.set.service.AssetEntrySetServiceUtil;
 import com.liferay.asset.entry.set.service.ClpSerializer;
@@ -42,8 +41,6 @@ public class ClpMessageListener extends BaseMessageListener {
 
 			AssetEntrySetServiceUtil.clearService();
 			AssetEntrySetLikeLocalServiceUtil.clearService();
-
-			AssetEntrySetLikeServiceUtil.clearService();
 		}
 	}
 }

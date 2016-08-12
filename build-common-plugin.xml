@@ -92,6 +92,7 @@
 				newenvironment="true"
 				outputproperty="build-service.output"
 			>
+				<jvmarg value="-Dfile.encoding=UTF-8" />
 				<jvmarg value="-Xms512m" />
 				<jvmarg value="-Xmx1024m" />
 				<jvmarg value="-Xss2048k" />
@@ -201,6 +202,7 @@
 	</macrodef>
 
 	<macrodef name="compile-jsp">
+		<attribute name="compile.jsp.delete.generated.files" default="true" />
 		<attribute name="compile.jsp.docroot.dir" />
 		<attribute name="compile.jsp.temp.dir" default="" />
 
@@ -266,7 +268,13 @@
 						</else>
 					</if>
 
-					<delete dir="classes/tomcat" quiet="true" />
+					<tstamp>
+						<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
+					</tstamp>
+
+					<var name="compile.jsp.jspc.dir" value="${tstamp.value}" />
+
+					<mkdir dir="${compile.jsp.jspc.dir}" />
 
 					<java
 						classname="com.liferay.jasper.jspc.JspC"
@@ -278,7 +286,7 @@
 					>
 						<sysproperty key="jspc.module.web" value="${jspc.module.web}" />
 						<sysproperty key="jspc.portal.dir" value="${app.server.portal.dir}" />
-						<arg line="-d classes/tomcat -webapp @{compile.jsp.docroot.dir}" />
+						<arg line="-d ${compile.jsp.jspc.dir}/src -webapp @{compile.jsp.docroot.dir}" />
 					</java>
 
 					<echo>${jspc.output}</echo>
@@ -286,29 +294,36 @@
 					<if>
 						<contains string="${jspc.output}" substring="JasperException" />
 						<then>
-							<delete dir="classes/tomcat" quiet="true" />
+							<delete dir="${compile.jsp.jspc.dir}/src" quiet="true" />
 
 							<fail>JSPs failed to compile.</fail>
 						</then>
 					</if>
 
 					<if>
-						<available file="classes/tomcat" type="dir" />
+						<available file="${compile.jsp.jspc.dir}/src" type="dir" />
 						<then>
+							<mkdir dir="${compile.jsp.jspc.dir}/classes" />
+
 							<javac
 								classpathref="jspc.classpath"
 								compiler="${javac.compiler}"
 								deprecation="${javac.deprecation}"
-								destdir="classes/tomcat"
+								destdir="${compile.jsp.jspc.dir}/classes"
 								encoding="${javac.encoding}"
 								errorProperty="jspc.javac.fail"
 								failonerror="false"
 								includeAntRuntime="false"
 								nowarn="on"
-								srcdir="classes/tomcat"
+								srcdir="${compile.jsp.jspc.dir}/src"
 							/>
 
-							<delete dir="classes/tomcat" quiet="true" />
+							<if>
+								<istrue value="@{compile.jsp.delete.generated.files}" />
+								<then>
+									<delete dir="${compile.jsp.jspc.dir}" quiet="true" />
+								</then>
+							</if>
 						</then>
 					</if>
 
@@ -515,6 +530,7 @@
 Bundle-Name: ${bnd.Bundle-Name} WSDD descriptors
 Bundle-Version: ${bnd.Bundle-Version}
 Fragment-Host: ${bnd.Bundle-SymbolicName}
+Import-Package: javax.servlet,javax.servlet.http
 Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 				</echo>
 
@@ -546,63 +562,74 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 	</target>
 
 	<target name="compile-jsp">
-		<set-module-properties
-			module.dir="${basedir}"
-		/>
-
 		<if>
-			<isset property="compile.jsp.docroot.dir" />
+			<resourcecount count="0" when="gt">
+				<fileset
+					dir="${basedir}"
+					excludes="**/custom_jsps/**/*,**/dependencies/**/*"
+					includes="docroot/**/*.jsp,src/META-INF/resources/**/*.jsp,tmp/**/*.jsp"
+				/>
+			</resourcecount>
 			<then>
-				<compile
+				<set-module-properties
 					module.dir="${basedir}"
 				/>
 
-				<compile-jsp
-					compile.jsp.docroot.dir="${compile.jsp.docroot.dir}"
-				/>
-			</then>
-			<elseif>
-				<available file="bnd.bnd" type="file" />
-				<then>
-					<antcall target="jar">
-						<param name="plugins.includes.path" value="${basedir}" />
-					</antcall>
+				<if>
+					<isset property="compile.jsp.docroot.dir" />
+					<then>
+						<compile
+							module.dir="${basedir}"
+						/>
 
-					<tstamp>
-						<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
-					</tstamp>
-
-					<unzip dest="${tstamp.value}" src="${plugin.file}" />
-
-					<if>
-						<available file="${tstamp.value}/META-INF/resources" type="dir" />
+						<compile-jsp
+							compile.jsp.docroot.dir="${compile.jsp.docroot.dir}"
+						/>
+					</then>
+					<elseif>
+						<available file="bnd.bnd" type="file" />
 						<then>
-							<compile-jsp
-								compile.jsp.docroot.dir="${tstamp.value}/META-INF/resources"
-								compile.jsp.temp.dir="${tstamp.value}"
-							/>
+							<antcall target="jar">
+								<param name="plugins.includes.path" value="${basedir}" />
+							</antcall>
+
+							<tstamp>
+								<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
+							</tstamp>
+
+							<unzip dest="${tstamp.value}" src="${plugin.file}" />
+
+							<if>
+								<available file="${tstamp.value}/META-INF/resources" type="dir" />
+								<then>
+									<compile-jsp
+										compile.jsp.docroot.dir="${tstamp.value}/META-INF/resources"
+										compile.jsp.temp.dir="${tstamp.value}"
+									/>
+								</then>
+								<else>
+									<compile-jsp
+										compile.jsp.docroot.dir="${tstamp.value}"
+										compile.jsp.temp.dir="${tstamp.value}"
+									/>
+								</else>
+							</if>
+
+							<delete dir="${tstamp.value}" />
 						</then>
-						<else>
-							<compile-jsp
-								compile.jsp.docroot.dir="${tstamp.value}"
-								compile.jsp.temp.dir="${tstamp.value}"
-							/>
-						</else>
-					</if>
+					</elseif>
+					<else>
+						<loop-macrodef-or-target
+							module.dirs="${basedir}"
+							target.name="compile"
+						/>
 
-					<delete dir="${tstamp.value}" />
-				</then>
-			</elseif>
-			<else>
-				<loop-macrodef-or-target
-					module.dirs="${basedir}"
-					target.name="compile"
-				/>
-
-				<compile-jsp
-					compile.jsp.docroot.dir="docroot"
-				/>
-			</else>
+						<compile-jsp
+							compile.jsp.docroot.dir="docroot"
+						/>
+					</else>
+				</if>
+			</then>
 		</if>
 	</target>
 
@@ -669,6 +696,8 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 			</sequential>
 		</for>
 	</target>
+
+	<target name="install" depends="publish-local-m2-release" />
 
 	<target name="jar-javadoc" depends="javadoc">
 		<jar-javadoc
@@ -768,32 +797,6 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 		<var name="patched.file.available" unset="true" />
 	</target>
 
-	<target name="publish-local-m2-release" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="local-m2" />
-		</antcall>
-	</target>
-
-	<target name="publish-local-m2-snapshot" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="local-m2" />
-			<param name="plugin.release.qualifier" value="-SNAPSHOT" />
-		</antcall>
-	</target>
-
-	<target name="publish-remote-m2-release" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="sonatype-m2-release" />
-		</antcall>
-	</target>
-
-	<target name="publish-remote-m2-snapshot" depends="jar-javadoc,jar-source,war">
-		<antcall target="build-common-ivy.publish">
-			<param name="ivy.publish.resolver" value="sonatype-m2-snapshot" />
-			<param name="plugin.release.qualifier" value="-SNAPSHOT" />
-		</antcall>
-	</target>
-
 	<target name="shrink-zip-cmd">
 		<tstamp>
 			<format property="tstamp.value" pattern="yyyyMMddkkmmssSSS" />
@@ -843,27 +846,105 @@ Include-Resource: WEB-INF/=server-config.wsdd,classes;filter:=*.wsdd
 
 				<propertycopy from="TEST_CLASS_GROUP_${test.class.group.index}" name="test.classes" />
 
-				<test-cmd
-					module.dir="${basedir}"
-					junit.forkmode="perTest"
-					test.class="${test.classes}"
-					test.type="unit"
+				<propertyregex property="test.java.classes"
+					global="true"
+					input="${test.classes}"
+					regexp="\.class"
+					replace=".java"
 				/>
 
-				<test-cmd
-					module.dir="${basedir}"
-					junit.forkmode="once"
-					test.class="${test.classes}"
-					test.type="integration"
-				/>
+				<if>
+					<and>
+						<or>
+							<not>
+								<isset property="test.type" />
+							</not>
+							<equals arg1="${test.type}" arg2="unit" />
+						</or>
+						<resourcecount count="0" when="gt">
+							<fileset dir="${basedir}/test/unit" erroronmissingdir="false" includes="${test.java.classes}" />
+						</resourcecount>
+					</and>
+					<then>
+						<test-cmd
+							module.dir="${basedir}"
+							junit.forkmode="perTest"
+							test.class="${test.classes}"
+							test.type="unit"
+						/>
+					</then>
+				</if>
+
+				<if>
+					<and>
+						<or>
+							<not>
+								<isset property="test.type" />
+							</not>
+							<equals arg1="${test.type}" arg2="integration" />
+						</or>
+						<resourcecount count="0" when="gt">
+							<fileset dir="${basedir}/test/integration" erroronmissingdir="false" includes="${test.java.classes}" />
+						</resourcecount>
+					</and>
+					<then>
+						<test-cmd
+							module.dir="${basedir}"
+							junit.forkmode="once"
+							test.class="${test.classes}"
+							test.type="integration"
+						/>
+					</then>
+				</if>
 			</then>
 		</if>
 
 		<if>
-			<equals arg1="${test.class.group.index}" arg2="0" />
+			<and>
+				<or>
+					<not>
+						<isset property="test.type" />
+					</not>
+					<equals arg1="${test.type}" arg2="unit" />
+				</or>
+				<equals arg1="${test.class.group.index}" arg2="0" />
+			</and>
 			<then>
 				<antcall target="compile-jsp" />
 			</then>
 		</if>
+	</target>
+
+	<target name="test-package">
+		<if>
+			<not>
+				<isset property="test.package" />
+			</not>
+			<then>
+				<fail>Use "ant test-package -Dtest.package=com.liferay.portal.kernel.util".</fail>
+			</then>
+		</if>
+
+		<propertyregex
+			global="true"
+			input="${test.package}"
+			property="test.package.dir"
+			regexp="\."
+			replace="/"
+		/>
+
+		<test-cmd
+			module.dir="${basedir}"
+			junit.forkmode="once"
+			test.class="**/${test.package.dir}/*Test.class"
+			test.type="integration"
+		/>
+
+		<test-cmd
+			module.dir="${basedir}"
+			junit.forkmode="perTest"
+			test.class="**/${test.package.dir}/*Test.class"
+			test.type="unit"
+		/>
 	</target>
 </project>

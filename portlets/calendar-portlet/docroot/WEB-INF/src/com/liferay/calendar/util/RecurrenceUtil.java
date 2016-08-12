@@ -21,6 +21,10 @@ import com.google.ical.values.DateValue;
 import com.google.ical.values.DateValueImpl;
 
 import com.liferay.calendar.model.CalendarBooking;
+import com.liferay.calendar.recurrence.PositionalWeekday;
+import com.liferay.calendar.recurrence.Recurrence;
+import com.liferay.calendar.recurrence.Weekday;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
@@ -29,6 +33,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * @author Marcellus Tavares
@@ -36,8 +41,9 @@ import java.util.List;
 public class RecurrenceUtil {
 
 	public static List<CalendarBooking> expandCalendarBooking(
-		CalendarBooking calendarBooking, long startTime, long endTime,
-		int maxSize) {
+			CalendarBooking calendarBooking, long startTime, long endTime,
+			int maxSize)
+		throws SystemException {
 
 		List<CalendarBooking> expandedCalendarBookings =
 			new ArrayList<CalendarBooking>();
@@ -75,14 +81,17 @@ public class RecurrenceUtil {
 	}
 
 	public static List<CalendarBooking> expandCalendarBookings(
-		List<CalendarBooking> calendarBookings, long startTime, long endTime) {
+			List<CalendarBooking> calendarBookings, long startTime,
+			long endTime)
+		throws SystemException {
 
 		return expandCalendarBookings(calendarBookings, startTime, endTime, 0);
 	}
 
 	public static List<CalendarBooking> expandCalendarBookings(
-		List<CalendarBooking> calendarBookings, long startTime, long endTime,
-		int maxSize) {
+			List<CalendarBooking> calendarBookings, long startTime,
+			long endTime, int maxSize)
+		throws SystemException {
 
 		List<CalendarBooking> expandedCalendarBookings =
 			new ArrayList<CalendarBooking>();
@@ -99,7 +108,8 @@ public class RecurrenceUtil {
 	}
 
 	public static CalendarBooking getCalendarBookingInstance(
-		CalendarBooking calendarBooking, int instanceIndex) {
+			CalendarBooking calendarBooking, int instanceIndex)
+		throws SystemException {
 
 		try {
 			CalendarBookingIterator calendarBookingIterator =
@@ -151,6 +161,69 @@ public class RecurrenceUtil {
 		}
 
 		return count;
+	}
+
+	public static Recurrence inTimeZone(
+		Recurrence recurrence, Calendar startTimeJCalendar, TimeZone timeZone) {
+
+		if (recurrence == null) {
+			return null;
+		}
+
+		recurrence = recurrence.clone();
+
+		List<Calendar> newExceptionJCalendars = new ArrayList<Calendar>();
+
+		List<Calendar> exceptionJCalendars =
+			recurrence.getExceptionJCalendars();
+
+		for (Calendar exceptionJCalendar : exceptionJCalendars) {
+			exceptionJCalendar = JCalendarUtil.getJCalendar(
+				exceptionJCalendar, timeZone);
+
+			newExceptionJCalendars.add(exceptionJCalendar);
+		}
+
+		recurrence.setExceptionJCalendars(newExceptionJCalendars);
+
+		List<PositionalWeekday> newPositionalWeekdays =
+			new ArrayList<PositionalWeekday>();
+
+		List<PositionalWeekday> positionalWeekdays =
+			recurrence.getPositionalWeekdays();
+
+		for (PositionalWeekday positionalWeekday : positionalWeekdays) {
+			Calendar jCalendar = JCalendarUtil.getJCalendar(
+				startTimeJCalendar, recurrence.getTimeZone());
+
+			Weekday weekday = positionalWeekday.getWeekday();
+
+			jCalendar.set(Calendar.DAY_OF_WEEK, weekday.getCalendarWeekday());
+
+			jCalendar = JCalendarUtil.getJCalendar(jCalendar, timeZone);
+
+			weekday = Weekday.getWeekday(jCalendar);
+
+			positionalWeekday = new PositionalWeekday(
+				weekday, positionalWeekday.getPosition());
+
+			newPositionalWeekdays.add(positionalWeekday);
+		}
+
+		recurrence.setPositionalWeekdays(newPositionalWeekdays);
+
+		recurrence.setTimeZone(timeZone);
+
+		Calendar untilJCalendar = recurrence.getUntilJCalendar();
+
+		if (untilJCalendar != null) {
+			untilJCalendar = JCalendarUtil.getJCalendar(
+				recurrence.getUntilJCalendar(), timeZone);
+
+			recurrence.setUntilJCalendar(untilJCalendar);
+		}
+
+		return recurrence;
 	}
 
 	private static DateValue _toDateValue(long time) {

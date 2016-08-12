@@ -42,7 +42,7 @@ public class CalendarServiceImpl extends CalendarServiceBaseImpl {
 	@Override
 	public Calendar addCalendar(
 			long groupId, long calendarResourceId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, int color,
+			Map<Locale, String> descriptionMap, String timeZoneId, int color,
 			boolean defaultCalendar, boolean enableComments,
 			boolean enableRatings, ServiceContext serviceContext)
 		throws PortalException, SystemException {
@@ -53,7 +53,7 @@ public class CalendarServiceImpl extends CalendarServiceBaseImpl {
 
 		return calendarLocalService.addCalendar(
 			getUserId(), groupId, calendarResourceId, nameMap, descriptionMap,
-			color, defaultCalendar, enableComments, enableRatings,
+			timeZoneId, color, defaultCalendar, enableComments, enableRatings,
 			serviceContext);
 	}
 
@@ -244,22 +244,6 @@ public class CalendarServiceImpl extends CalendarServiceBaseImpl {
 	public Calendar updateCalendar(
 			long calendarId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, int color,
-			boolean defaultCalendar, boolean enableComments,
-			boolean enableRatings, ServiceContext serviceContext)
-		throws PortalException, SystemException {
-
-		CalendarPermission.check(
-			getPermissionChecker(), calendarId, ActionKeys.UPDATE);
-
-		return calendarLocalService.updateCalendar(
-			calendarId, nameMap, descriptionMap, color, defaultCalendar,
-			enableComments, enableRatings, serviceContext);
-	}
-
-	@Override
-	public Calendar updateCalendar(
-			long calendarId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, int color,
 			ServiceContext serviceContext)
 		throws PortalException, SystemException {
 
@@ -268,6 +252,22 @@ public class CalendarServiceImpl extends CalendarServiceBaseImpl {
 
 		return calendarLocalService.updateCalendar(
 			calendarId, nameMap, descriptionMap, color, serviceContext);
+	}
+
+	@Override
+	public Calendar updateCalendar(
+			long calendarId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, String timeZoneId, int color,
+			boolean defaultCalendar, boolean enableComments,
+			boolean enableRatings, ServiceContext serviceContext)
+		throws PortalException, SystemException {
+
+		CalendarPermission.check(
+			getPermissionChecker(), calendarId, ActionKeys.UPDATE);
+
+		return calendarLocalService.updateCalendar(
+			calendarId, nameMap, descriptionMap, timeZoneId, color,
+			defaultCalendar, enableComments, enableRatings, serviceContext);
 	}
 
 	@Override

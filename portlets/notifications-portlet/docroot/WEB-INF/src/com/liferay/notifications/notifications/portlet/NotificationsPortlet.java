@@ -14,6 +14,11 @@
 
 package com.liferay.notifications.notifications.portlet;
 
+import com.liferay.compat.portal.kernel.util.ArrayUtil;
+import com.liferay.compat.portal.kernel.util.HtmlUtil;
+import com.liferay.compat.portal.kernel.util.HttpUtil;
+import com.liferay.compat.portal.kernel.util.StringUtil;
+import com.liferay.compat.portal.kernel.util.Time;
 import com.liferay.notifications.model.UserNotificationEvent;
 import com.liferay.notifications.util.NotificationsConstants;
 import com.liferay.notifications.util.NotificationsUtil;
@@ -26,27 +31,26 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.notifications.UserNotificationFeedEntry;
 import com.liferay.portal.kernel.notifications.UserNotificationManagerUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringPool;
-import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.Portlet;
 import com.liferay.portal.model.User;
 import com.liferay.portal.service.PortletLocalServiceUtil;
+import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.service.ServiceContextFactory;
 import com.liferay.portal.service.UserLocalServiceUtil;
 import com.liferay.portal.service.UserNotificationDeliveryLocalServiceUtil;
 import com.liferay.portal.service.UserNotificationEventLocalServiceUtil;
 import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.portal.util.PortalUtil;
+import com.liferay.portal.util.PortletCategoryKeys;
 import com.liferay.util.ContentUtil;
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
+import java.text.DateFormat;
 import java.text.Format;
 
 import java.util.ArrayList;
@@ -253,6 +257,8 @@ public class NotificationsPortlet extends MVCPortlet {
 		catch (Exception e) {
 			jsonObject.put("success", Boolean.FALSE);
 		}
+
+		writeJSON(actionRequest, actionResponse, jsonObject);
 	}
 
 	protected void getNotificationsCount(
@@ -266,9 +272,8 @@ public class NotificationsPortlet extends MVCPortlet {
 
 		try {
 			int newUserNotificationsCount =
-				UserNotificationEventLocalServiceUtil.
-					getDeliveredUserNotificationEventsCount(
-						themeDisplay.getUserId(), false);
+				NotificationsUtil.getDeliveredUserNotificationEventsCount(
+					themeDisplay.getUserId(), false);
 
 			jsonObject.put(
 				"newUserNotificationsCount", newUserNotificationsCount);
@@ -277,9 +282,8 @@ public class NotificationsPortlet extends MVCPortlet {
 				"timestamp", String.valueOf(System.currentTimeMillis()));
 
 			int unreadUserNotificationsCount =
-				UserNotificationEventLocalServiceUtil.
-					getArchivedUserNotificationEventsCount(
-						themeDisplay.getUserId(), false);
+				NotificationsUtil.getArchivedUserNotificationEventsCount(
+					themeDisplay.getUserId(), false);
 
 			jsonObject.put(
 				"unreadUserNotificationsCount", unreadUserNotificationsCount);
@@ -383,75 +387,14 @@ public class NotificationsPortlet extends MVCPortlet {
 			portalUserNotificationEvent =
 				userNotificationEvent.getUserNotificationEvent();
 
-		UserNotificationFeedEntry userNotificationFeedEntry =
-			UserNotificationManagerUtil.interpret(
-				StringPool.BLANK, portalUserNotificationEvent,
-				ServiceContextFactory.getInstance(resourceRequest));
+		String actionDiv = _ACTION_DIV_DEFAULT;
 
-		if (userNotificationFeedEntry == null) {
-			return null;
-		}
+		Portlet portlet = PortletLocalServiceUtil.getPortletById(
+			themeDisplay.getCompanyId(), userNotificationEvent.getType());
 
-		boolean actionable = ArrayUtil.contains(
-			NotificationsConstants.ACTIONABLE_TYPES,
-			userNotificationFeedEntry.getPortletId());
-
-		LiferayPortletResponse liferayPortletResponse =
-			(LiferayPortletResponse)resourceResponse;
-
-		PortletURL actionURL = liferayPortletResponse.createActionURL(
-			PortletKeys.NOTIFICATIONS);
-
-		actionURL.setParameter(
-			"userNotificationEventId",
-			String.valueOf(userNotificationEvent.getUserNotificationEventId()));
-
-		actionURL.setWindowState(WindowState.NORMAL);
-
-		String actionDiv = StringPool.BLANK;
-		String cssClass = StringPool.BLANK;
-		String markAsReadIcon = StringPool.BLANK;
-
-		if (actionable) {
-			actionURL.setParameter(
-				"javax.portlet.action", "deleteUserNotificationEvent");
-
-			actionDiv =
-				StringUtil.replace(
-					_DELETE_DIV, "[$DELETE_URL$]", actionURL.toString());
-		}
-		else {
-			actionURL.setParameter("javax.portlet.action", "markAsRead");
-
-			actionDiv =
-				StringUtil.replace(
-					_MARK_AS_READ_DIV,
-					new String[] {"[$LINK$]", "[$MARK_AS_READ_URL$]"},
-					new String[] {
-						userNotificationFeedEntry.getLink(),
-						actionURL.toString()});
-
-			if (userNotificationEvent.isArchived()) {
-				cssClass = "archived";
-			}
-			else {
-				markAsReadIcon = StringUtil.replace(
-					_MARK_AS_READ_ICON, "[$TITLE_MESSAGE$]",
-					LanguageUtil.get(themeDisplay.getLocale(), "mark-as-read"));
-			}
-		}
-
-		Portlet portlet =
-			PortletLocalServiceUtil.getPortletById(
-				themeDisplay.getCompanyId(), userNotificationEvent.getType());
-
-		String portletName = portlet.getDisplayName();
+		String portletName = PortalUtil.getPortletTitle(
+			portlet.getPortletId(), themeDisplay.getLocale());
 		String portletIcon = portlet.getContextPath() + portlet.getIcon();
-
-		Format simpleDateFormat =
-			FastDateFormatFactoryUtil.getSimpleDateFormat(
-				"EEEE, MMMMM dd, yyyy 'at' h:mm a", themeDisplay.getLocale(),
-				themeDisplay.getTimeZone());
 
 		JSONObject userNotificationEventJSONObject =
 			JSONFactoryUtil.createJSONObject(
@@ -470,6 +413,110 @@ public class NotificationsPortlet extends MVCPortlet {
 			userPortraitURL = user.getPortraitURL(themeDisplay);
 		}
 
+		Format dateFormatDate = FastDateFormatFactoryUtil.getDate(
+			DateFormat.FULL, themeDisplay.getLocale(),
+			themeDisplay.getTimeZone());
+
+		Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
+			DateFormat.FULL, DateFormat.SHORT, themeDisplay.getLocale(),
+			themeDisplay.getTimeZone());
+
+		String timestamp = Time.getRelativeTimeDescription(
+			userNotificationEvent.getTimestamp(), themeDisplay.getLocale(),
+			themeDisplay.getTimeZone(), dateFormatDate);
+
+		String timeTitle = dateTimeFormat.format(
+			userNotificationEvent.getTimestamp());
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			resourceRequest);
+
+		UserNotificationFeedEntry userNotificationFeedEntry =
+			UserNotificationManagerUtil.interpret(
+				StringPool.BLANK, portalUserNotificationEvent, serviceContext);
+
+		if (userNotificationFeedEntry == null) {
+			String body = StringUtil.replace(
+				_BODY_TEMPLATE_DEFAULT, new String[] {"[$BODY$]", "[$TITLE$]"},
+				new String[] {
+					serviceContext.translate(
+						"unable-to-display-notification-for-x",
+						portlet.getDisplayName()),
+					serviceContext.translate(
+						"notification-no-longer-applies")
+				});
+
+			return StringUtil.replace(
+				ContentUtil.get(PortletPropsValues.USER_NOTIFICATION_ENTRY),
+				new String[] {
+					"[$ACTION_DIV$]", "[$BODY$]", "[$CSS_CLASS$]",
+					"[$MARK_AS_READ_ICON$]", "[$PORTLET_ICON$]",
+					"[$PORTLET_NAME$]", "[$TIMESTAMP$]", "[$TIMETITLE$]",
+					"[$USER_FULL_NAME$]", "[$USER_PORTRAIT_URL$]"
+				},
+				new String[] {
+					actionDiv, body, StringPool.BLANK, StringPool.BLANK,
+					portletIcon, portletName, timestamp, timeTitle,
+					userFullName, userPortraitURL
+				});
+		}
+
+		boolean actionable = ArrayUtil.contains(
+			NotificationsConstants.ACTIONABLE_TYPES,
+			userNotificationFeedEntry.getPortletId());
+
+		LiferayPortletResponse liferayPortletResponse =
+			(LiferayPortletResponse)resourceResponse;
+
+		PortletURL actionURL = liferayPortletResponse.createActionURL(
+			PortletKeys.NOTIFICATIONS);
+
+		actionURL.setParameter(
+			"userNotificationEventId",
+			String.valueOf(userNotificationEvent.getUserNotificationEventId()));
+
+		actionURL.setWindowState(WindowState.NORMAL);
+
+		String cssClass = StringPool.BLANK;
+		String markAsReadIcon = StringPool.BLANK;
+
+		if (actionable) {
+			actionURL.setParameter(
+				"javax.portlet.action", "deleteUserNotificationEvent");
+
+			actionDiv =
+				StringUtil.replace(
+					_DELETE_DIV, "[$DELETE_URL$]", actionURL.toString());
+		}
+		else {
+			actionURL.setParameter("javax.portlet.action", "markAsRead");
+
+			String link = userNotificationFeedEntry.getLink();
+
+			String value = HttpUtil.getParameter(
+				link, "controlPanelCategory", false);
+
+			if (Validator.equals(PortletCategoryKeys.MY, value)) {
+				link = HttpUtil.addParameter(
+					link, "doAsGroupId", themeDisplay.getScopeGroupId());
+			}
+
+			actionDiv =
+				StringUtil.replace(
+					_MARK_AS_READ_DIV,
+					new String[] {"[$LINK$]", "[$MARK_AS_READ_URL$]"},
+					new String[] {link, actionURL.toString()});
+
+			if (userNotificationEvent.isArchived()) {
+				cssClass = "archived";
+			}
+			else {
+				markAsReadIcon = StringUtil.replace(
+					_MARK_AS_READ_ICON, "[$TITLE_MESSAGE$]",
+					LanguageUtil.get(themeDisplay.getLocale(), "mark-as-read"));
+			}
+		}
+
 		return StringUtil.replace(
 			ContentUtil.get(PortletPropsValues.USER_NOTIFICATION_ENTRY),
 			new String[] {
@@ -479,12 +526,9 @@ public class NotificationsPortlet extends MVCPortlet {
 				"[$USER_PORTRAIT_URL$]"},
 			new String[] {
 				actionDiv, userNotificationFeedEntry.getBody(), cssClass,
-				markAsReadIcon, portletIcon, portletName,
-				Time.getRelativeTimeDescription(
-					userNotificationEvent.getTimestamp(),
-					themeDisplay.getLocale(), themeDisplay.getTimeZone()),
-				simpleDateFormat.format(userNotificationEvent.getTimestamp()),
-				userFullName, userPortraitURL});
+				markAsReadIcon, portletIcon, portletName, timestamp, timeTitle,
+				userFullName, userPortraitURL
+			});
 	}
 
 	protected void updateArchived(long userNotificationEventId)
@@ -499,6 +543,13 @@ public class NotificationsPortlet extends MVCPortlet {
 		UserNotificationEventLocalServiceUtil.updateUserNotificationEvent(
 			userNotificationEvent);
 	}
+
+	private static final String _ACTION_DIV_DEFAULT =
+		"<div class=\"clearfix\">";
+
+	private static final String _BODY_TEMPLATE_DEFAULT =
+		"<div class=\"title\">[$TITLE$]</div><div class=\"body\">[$BODY$]" +
+			"</div>";
 
 	private static final String _DELETE_DIV =
 		"<div class=\"clearfix user-notification-delete\" data-deleteURL=\"" +

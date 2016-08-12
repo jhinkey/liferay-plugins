@@ -7,6 +7,34 @@
 			<access>PROPERTY</access>
 		</persistence-unit-defaults>
 	</persistence-unit-metadata>
+	<mapped-superclass class="com.liferay.sync.model.impl.SyncDeviceModelImpl">
+		<attributes>
+			<id name="syncDeviceId" />
+			<basic name="uuid">
+				<column name="UUID_" />
+			</basic>
+			<basic name="companyId" />
+			<basic name="userId" />
+			<basic name="userName" />
+			<basic name="createDate">
+				<temporal>TIMESTAMP</temporal>
+			</basic>
+			<basic name="modifiedDate">
+				<temporal>TIMESTAMP</temporal>
+			</basic>
+			<basic name="type">
+				<column name="TYPE_" />
+			</basic>
+			<basic name="buildNumber" />
+			<basic name="featureSet" />
+			<basic name="hostname" />
+			<basic name="status" />
+			<transient name="modelAttributes" />
+			<transient name="primaryKey" />
+			<transient name="primaryKeyObj" />
+			<transient name="userUuid" />
+		</attributes>
+	</mapped-superclass>
 	<mapped-superclass class="com.liferay.sync.model.impl.SyncDLFileVersionDiffModelImpl">
 		<attributes>
 			<id name="syncDLFileVersionDiffId" />
@@ -35,6 +63,7 @@
 			<basic name="modifiedTime" />
 			<basic name="repositoryId" />
 			<basic name="parentFolderId" />
+			<basic name="treePath" />
 			<basic name="name" />
 			<basic name="extension" />
 			<basic name="mimeType" />
@@ -48,6 +77,9 @@
 			</basic>
 			<basic name="checksum" />
 			<basic name="event" />
+			<basic name="lastPermissionChangeDate">
+				<temporal>TIMESTAMP</temporal>
+			</basic>
 			<basic name="lockExpirationDate">
 				<temporal>TIMESTAMP</temporal>
 			</basic>
@@ -65,6 +97,10 @@
 			<transient name="userUuid" />
 		</attributes>
 	</mapped-superclass>
+	<entity class="com.liferay.sync.model.impl.SyncDeviceImpl" name="SyncDevice">
+		<table name="SyncDevice" />
+		<attributes />
+	</entity>
 	<entity class="com.liferay.sync.model.impl.SyncDLFileVersionDiffImpl" name="SyncDLFileVersionDiff">
 		<table name="SyncDLFileVersionDiff" />
 		<attributes />

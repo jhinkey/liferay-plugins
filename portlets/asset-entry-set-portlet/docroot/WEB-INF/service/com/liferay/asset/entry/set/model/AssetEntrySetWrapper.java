@@ -58,10 +58,13 @@ public class AssetEntrySetWrapper implements AssetEntrySet,
 		attributes.put("parentAssetEntrySetId", getParentAssetEntrySetId());
 		attributes.put("creatorClassNameId", getCreatorClassNameId());
 		attributes.put("creatorClassPK", getCreatorClassPK());
+		attributes.put("creatorName", getCreatorName());
 		attributes.put("payload", getPayload());
 		attributes.put("childAssetEntrySetsCount", getChildAssetEntrySetsCount());
 		attributes.put("assetEntrySetLikesCount", getAssetEntrySetLikesCount());
 		attributes.put("privateAssetEntrySet", getPrivateAssetEntrySet());
+		attributes.put("stickyTime", getStickyTime());
+		attributes.put("type", getType());
 
 		return attributes;
 	}
@@ -123,6 +126,12 @@ public class AssetEntrySetWrapper implements AssetEntrySet,
 			setCreatorClassPK(creatorClassPK);
 		}
 
+		String creatorName = (String)attributes.get("creatorName");
+
+		if (creatorName != null) {
+			setCreatorName(creatorName);
+		}
+
 		String payload = (String)attributes.get("payload");
 
 		if (payload != null) {
@@ -148,6 +157,18 @@ public class AssetEntrySetWrapper implements AssetEntrySet,
 
 		if (privateAssetEntrySet != null) {
 			setPrivateAssetEntrySet(privateAssetEntrySet);
+		}
+
+		Long stickyTime = (Long)attributes.get("stickyTime");
+
+		if (stickyTime != null) {
+			setStickyTime(stickyTime);
+		}
+
+		Integer type = (Integer)attributes.get("type");
+
+		if (type != null) {
+			setType(type);
 		}
 	}
 
@@ -374,6 +395,26 @@ public class AssetEntrySetWrapper implements AssetEntrySet,
 	}
 
 	/**
+	* Returns the creator name of this asset entry set.
+	*
+	* @return the creator name of this asset entry set
+	*/
+	@Override
+	public java.lang.String getCreatorName() {
+		return _assetEntrySet.getCreatorName();
+	}
+
+	/**
+	* Sets the creator name of this asset entry set.
+	*
+	* @param creatorName the creator name of this asset entry set
+	*/
+	@Override
+	public void setCreatorName(java.lang.String creatorName) {
+		_assetEntrySet.setCreatorName(creatorName);
+	}
+
+	/**
 	* Returns the payload of this asset entry set.
 	*
 	* @return the payload of this asset entry set
@@ -461,6 +502,46 @@ public class AssetEntrySetWrapper implements AssetEntrySet,
 	@Override
 	public void setPrivateAssetEntrySet(boolean privateAssetEntrySet) {
 		_assetEntrySet.setPrivateAssetEntrySet(privateAssetEntrySet);
+	}
+
+	/**
+	* Returns the sticky time of this asset entry set.
+	*
+	* @return the sticky time of this asset entry set
+	*/
+	@Override
+	public long getStickyTime() {
+		return _assetEntrySet.getStickyTime();
+	}
+
+	/**
+	* Sets the sticky time of this asset entry set.
+	*
+	* @param stickyTime the sticky time of this asset entry set
+	*/
+	@Override
+	public void setStickyTime(long stickyTime) {
+		_assetEntrySet.setStickyTime(stickyTime);
+	}
+
+	/**
+	* Returns the type of this asset entry set.
+	*
+	* @return the type of this asset entry set
+	*/
+	@Override
+	public int getType() {
+		return _assetEntrySet.getType();
+	}
+
+	/**
+	* Sets the type of this asset entry set.
+	*
+	* @param type the type of this asset entry set
+	*/
+	@Override
+	public void setType(int type) {
+		_assetEntrySet.setType(type);
 	}
 
 	@Override
@@ -574,12 +655,11 @@ public class AssetEntrySetWrapper implements AssetEntrySet,
 	}
 
 	@Override
-	public void setChildAssetEntrySets(long userId, long createTime,
-		int childAssetEntrySetsLimit)
+	public void setChildAssetEntrySets(
+		java.util.List<com.liferay.asset.entry.set.model.AssetEntrySet> childAssetEntrySets)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		_assetEntrySet.setChildAssetEntrySets(userId, createTime,
-			childAssetEntrySetsLimit);
+		_assetEntrySet.setChildAssetEntrySets(childAssetEntrySets);
 	}
 
 	@Override

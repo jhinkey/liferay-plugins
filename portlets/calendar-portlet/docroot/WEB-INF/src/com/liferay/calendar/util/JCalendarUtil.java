@@ -72,6 +72,10 @@ public class JCalendarUtil {
 		return shift.intValue();
 	}
 
+	public static Calendar getJCalendar(Calendar jCalendar, TimeZone timeZone) {
+		return getJCalendar(jCalendar.getTimeInMillis(), timeZone);
+	}
+
 	public static Calendar getJCalendar(
 		int year, int month, int day, int hour, int minutes, int seconds,
 		int milliseconds, TimeZone timeZone) {
@@ -127,6 +131,32 @@ public class JCalendarUtil {
 		}
 
 		return weekOfMonth;
+	}
+
+	public static boolean isSameDayOfWeek(
+		Calendar jCalendar1, Calendar jCalendar2) {
+
+		int dayOfWeek1 = jCalendar1.get(Calendar.DAY_OF_WEEK);
+		int dayOfWeek2 = jCalendar2.get(Calendar.DAY_OF_WEEK);
+
+		if (dayOfWeek1 == dayOfWeek2) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	public static Calendar mergeJCalendar(
+		Calendar dateJCalendar, Calendar timeJCalendar, TimeZone timeZone) {
+
+		return CalendarFactoryUtil.getCalendar(
+			dateJCalendar.get(Calendar.YEAR), dateJCalendar.get(Calendar.MONTH),
+			dateJCalendar.get(Calendar.DAY_OF_MONTH),
+			timeJCalendar.get(Calendar.HOUR_OF_DAY),
+			timeJCalendar.get(Calendar.MINUTE),
+			timeJCalendar.get(Calendar.SECOND),
+			timeJCalendar.get(Calendar.MILLISECOND), timeZone);
 	}
 
 	public static Calendar toLastHourJCalendar(Calendar jCalendar) {

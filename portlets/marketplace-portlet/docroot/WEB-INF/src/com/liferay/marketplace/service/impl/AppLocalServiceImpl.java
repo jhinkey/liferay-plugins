@@ -75,8 +75,8 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 
 	@Override
 	public void clearInstalledAppsCache() {
-		_bundledApps = null;
 		_installedApps = null;
+		_prepackagedApps = null;
 	}
 
 	@Override
@@ -126,54 +126,6 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 	@Override
 	public List<App> getApps(String category) throws SystemException {
 		return appPersistence.findByCategory(category);
-	}
-
-	@Override
-	public Map<String, String> getBundledApps() {
-		if (_bundledApps != null) {
-			return _bundledApps;
-		}
-
-		Map<String, String> bundledApps = new HashMap<String, String>();
-
-		List<PluginPackage> pluginPackages =
-			DeployManagerUtil.getInstalledPluginPackages();
-
-		for (PluginPackage pluginPackage : pluginPackages) {
-			ServletContext servletContext = ServletContextPool.get(
-				pluginPackage.getContext());
-
-			InputStream inputStream = null;
-
-			try {
-				inputStream = servletContext.getResourceAsStream(
-					"/WEB-INF/liferay-releng.changelog.md5");
-
-				if (inputStream == null) {
-					continue;
-				}
-
-				String relengHash = StringUtil.read(inputStream);
-
-				if (Validator.isNotNull(relengHash)) {
-					bundledApps.put(pluginPackage.getContext(), relengHash);
-				}
-			}
-			catch (Exception e) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(
-						"Unable to read plugin package MD5 checksum for " +
-							pluginPackage.getContext());
-				}
-			}
-			finally {
-				StreamUtil.cleanUp(inputStream);
-			}
-		}
-
-		_bundledApps = bundledApps;
-
-		return _bundledApps;
 	}
 
 	@Override
@@ -247,6 +199,69 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 		_installedApps = installedApps;
 
 		return _installedApps;
+	}
+
+	@Override
+	public List<App> getInstalledApps(String category) throws SystemException {
+		List<App> apps = appPersistence.findByCategory(category);
+
+		List<App> installedApps = new ArrayList<App>(apps.size());
+
+		for (App app : apps) {
+			if (app.isInstalled()) {
+				installedApps.add(app);
+			}
+		}
+
+		return installedApps;
+	}
+
+	@Override
+	public Map<String, String> getPrepackagedApps() {
+		if (_prepackagedApps != null) {
+			return _prepackagedApps;
+		}
+
+		Map<String, String> prepackagedApps = new HashMap<String, String>();
+
+		List<PluginPackage> pluginPackages =
+			DeployManagerUtil.getInstalledPluginPackages();
+
+		for (PluginPackage pluginPackage : pluginPackages) {
+			ServletContext servletContext = ServletContextPool.get(
+				pluginPackage.getContext());
+
+			InputStream inputStream = null;
+
+			try {
+				inputStream = servletContext.getResourceAsStream(
+					"/WEB-INF/liferay-releng.changelog.md5");
+
+				if (inputStream == null) {
+					continue;
+				}
+
+				String relengHash = StringUtil.read(inputStream);
+
+				if (Validator.isNotNull(relengHash)) {
+					prepackagedApps.put(pluginPackage.getContext(), relengHash);
+				}
+			}
+			catch (Exception e) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"Unable to read plugin package MD5 checksum for " +
+							pluginPackage.getContext());
+				}
+			}
+			finally {
+				StreamUtil.cleanUp(inputStream);
+			}
+		}
+
+		_prepackagedApps = prepackagedApps;
+
+		return _prepackagedApps;
 	}
 
 	@Override
@@ -457,8 +472,7 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 	}
 
 	@Override
-	public App updateApp(
-			long userId, long remoteAppId, String version, File file)
+	public App updateApp(long userId, File file)
 		throws PortalException, SystemException {
 
 		Properties properties = getMarketplaceProperties(file);
@@ -468,10 +482,13 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 				"Unable to read liferay-marketplace.properties");
 		}
 
+		long remoteAppId = GetterUtil.getLong(
+			properties.getProperty("remote-app-id"));
 		String title = properties.getProperty("title");
 		String description = properties.getProperty("description");
 		String category = properties.getProperty("category");
 		String iconURL = properties.getProperty("icon-url");
+		String version = properties.getProperty("version");
 
 		return updateApp(
 			userId, remoteAppId, title, description, category, iconURL, version,
@@ -604,7 +621,7 @@ public class AppLocalServiceImpl extends AppLocalServiceBaseImpl {
 
 	private static Log _log = LogFactoryUtil.getLog(AppLocalServiceImpl.class);
 
-	private Map<String, String> _bundledApps;
 	private List<App> _installedApps;
+	private Map<String, String> _prepackagedApps;
 
 }

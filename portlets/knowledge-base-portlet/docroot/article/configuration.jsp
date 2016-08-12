@@ -55,15 +55,7 @@ if (PortalUtil.isRSSFeedsEnabled()) {
 
 						<liferay-ui:input-resource id="configurationKBArticle" url="<%= (kbArticle != null) ? kbArticle.getTitle() : StringPool.BLANK %>" />
 
-						<liferay-portlet:renderURL portletName="<%= portletResource %>" var="selectConfigurationKBArticleURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-							<portlet:param name="mvcPath" value="/article/select_configuration_article.jsp" />
-						</liferay-portlet:renderURL>
-
-						<%
-						String taglibOnClick = "var selectConfigurationKBArticleWindow = window.open('" + selectConfigurationKBArticleURL + "&" + HtmlUtil.escapeJS(PortalUtil.getPortletNamespace(portletResource)) + "&selResourcePrimKey=' + document." + renderResponse.getNamespace() + "fm." + renderResponse.getNamespace() + "resourcePrimKey.value, 'selectConfigurationKBArticle', 'directories=no,height=640,location=no,menubar=no,resizable=yes,scrollbars=yes,status=no,toolbar=no,width=680'); void(''); selectConfigurationKBArticleWindow.focus();";
-						%>
-
-						<aui:button onClick="<%= taglibOnClick %>" value="select" />
+						<aui:button name="selectKBArticleButton" value="select" />
 					</aui:field-wrapper>
 				</div>
 			</c:when>
@@ -78,6 +70,8 @@ if (PortalUtil.isRSSFeedsEnabled()) {
 				</div>
 
 				<aui:input label="show-asset-entries" name="preferences--showKBArticleAssetEntries--" type="checkbox" value="<%= showKBArticleAssetEntries %>" />
+
+				<aui:input label="show-attachments" name="preferences--showKBArticleAttachments--" type="checkbox" value="<%= showKBArticleAttachments %>" />
 
 				<aui:input label="enable-related-assets" name="preferences--enableKBArticleAssetLinks--" type="checkbox" value="<%= enableKBArticleAssetLinks %>" />
 
@@ -148,11 +142,34 @@ if (PortalUtil.isRSSFeedsEnabled()) {
 
 <c:choose>
 	<c:when test='<%= tabs2.equals("general") %>'>
-		<aui:script>
-			function <portlet:namespace />selectConfigurationKBArticle(resourcePrimKey, title) {
-				document.<portlet:namespace />fm.<portlet:namespace />resourcePrimKey.value = resourcePrimKey;
-				document.getElementById('<portlet:namespace />configurationKBArticle').value = title;
-			}
+		<aui:script use="aui-base">
+			<liferay-portlet:renderURL portletName="<%= portletResource %>" var="selectConfigurationKBArticleURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+				<portlet:param name="mvcPath" value="/article/select_configuration_object.jsp" />
+				<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(PortalUtil.getClassNameId(KBFolderConstants.getClassName())) %>" />
+				<portlet:param name="parentResourcePrimKey" value="<%= String.valueOf(KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) %>" />
+			</liferay-portlet:renderURL>
+
+			A.one('#<portlet:namespace />selectKBArticleButton').on(
+				'click',
+				function(event) {
+					Liferay.Util.selectEntity(
+						{
+							dialog: {
+								constrain: true,
+								destroyOnHide: true,
+								modal: true
+							},
+							id: '<portlet:namespace />selectConfigurationKBObject',
+							title: '<liferay-ui:message key="article" />',
+							uri: '<%= selectConfigurationKBArticleURL %>'
+						},
+						function(event) {
+							document.<portlet:namespace />fm.<portlet:namespace />resourcePrimKey.value = event.resourceprimkey;
+							document.getElementById('<portlet:namespace />configurationKBArticle').value = event.title;
+						}
+					);
+				}
+			);
 		</aui:script>
 	</c:when>
 	<c:when test='<%= tabs2.equals("display-settings") %>'>

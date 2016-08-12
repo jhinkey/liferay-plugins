@@ -16,17 +16,18 @@ package com.liferay.asset.entry.set.util;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.ObjectValuePair;
-import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.model.User;
-import com.liferay.portal.model.UserConstants;
 import com.liferay.portal.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.service.GroupLocalServiceUtil;
 import com.liferay.portal.service.UserLocalServiceUtil;
-import com.liferay.portal.util.PortalUtil;
+import com.liferay.portlet.asset.model.AssetTag;
+import com.liferay.portlet.asset.service.AssetTagLocalServiceUtil;
 
 /**
  * @author Matthew Kong
@@ -34,44 +35,63 @@ import com.liferay.portal.util.PortalUtil;
 public class AssetEntrySetParticipantInfoImpl
 	implements AssetEntrySetParticipantInfo {
 
+	public JSONArray getAssetTagsJSONArray(long userId, String[] assetTagNames)
+		throws PortalException, SystemException {
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		User user = UserLocalServiceUtil.getUser(userId);
+
+		Group group = GroupLocalServiceUtil.getCompanyGroup(
+			user.getCompanyId());
+
+		AssetTagLocalServiceUtil.checkTags(userId, group, assetTagNames);
+
+		for (String assetTagName : assetTagNames) {
+			AssetTag assetTag = AssetTagLocalServiceUtil.getTag(
+				group.getGroupId(), assetTagName);
+
+			if (assetTag == null) {
+				throw new SystemException(
+					"Asset tag does not exist for name " + assetTagName);
+			}
+
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+			jsonObject.put("classNameId", _ASSET_TAG_CLASS_NAME_ID);
+			jsonObject.put("classPK", assetTag.getTagId());
+			jsonObject.put("name", assetTagName);
+
+			jsonArray.put(jsonObject);
+		}
+
+		return jsonArray;
+	}
+
 	public ObjectValuePair<Long, Long> getClassNameIdAndClassPKOVP(long userId)
 		throws SystemException {
 
 		return new ObjectValuePair<Long, Long>(_USER_CLASS_NAME_ID, userId);
 	}
 
-	public JSONObject getParticipantJSONObject(
-			JSONObject participantJSONObject, long classNameId, long classPK,
-			boolean includeProfileImageURL)
+	public String[] getMembershipSearchTerms(long userId) {
+		return new String[0];
+	}
+
+	public String getParticipantName(long classNameId, long classPK)
 		throws PortalException, SystemException {
 
 		if (classNameId != _USER_CLASS_NAME_ID) {
-			return participantJSONObject;
+			return StringPool.BLANK;
 		}
 
 		User user = UserLocalServiceUtil.getUser(classPK);
 
-		participantJSONObject.put(
-			AssetEntrySetConstants.ASSET_ENTRY_KEY_PARTICIPANT_FULL_NAME,
-			user.getFullName());
-		participantJSONObject.put(
-			AssetEntrySetConstants.
-				ASSET_ENTRY_KEY_PARTICIPANT_PROFILE_IMAGE_URL,
-			UserConstants.getPortraitURL(
-				PortalUtil.getPathImage(), user.isMale(),
-				user.getPortraitId()));
+		return user.getFullName();
+	}
 
-		Group group = user.getGroup();
-
-		participantJSONObject.put(
-			AssetEntrySetConstants.ASSET_ENTRY_KEY_PARTICIPANT_URL,
-			_LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING +
-				group.getFriendlyURL());
-
-		participantJSONObject.put("classNameId", classNameId);
-		participantJSONObject.put("classPK", classPK);
-
-		return participantJSONObject;
+	public String getSearchTerm(long classNameId, long classPK) {
+		return StringPool.BLANK;
 	}
 
 	public boolean isMember(
@@ -102,11 +122,11 @@ public class AssetEntrySetParticipantInfoImpl
 		return false;
 	}
 
+	private static final long _ASSET_TAG_CLASS_NAME_ID =
+		ClassNameLocalServiceUtil.getClassNameId(AssetTag.class);
+
 	private static final long _GROUP_CLASS_NAME_ID =
 		ClassNameLocalServiceUtil.getClassNameId(Group.class);
-
-	private static final String _LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING =
-		PropsUtil.get(PropsKeys.LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING);
 
 	private static final long _USER_CLASS_NAME_ID =
 		ClassNameLocalServiceUtil.getClassNameId(User.class);

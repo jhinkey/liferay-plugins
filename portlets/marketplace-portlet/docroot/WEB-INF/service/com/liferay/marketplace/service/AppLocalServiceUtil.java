@@ -317,13 +317,19 @@ public class AppLocalServiceUtil {
 		return getService().getApps(category);
 	}
 
-	public static java.util.Map<java.lang.String, java.lang.String> getBundledApps() {
-		return getService().getBundledApps();
-	}
-
 	public static java.util.List<com.liferay.marketplace.model.App> getInstalledApps()
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return getService().getInstalledApps();
+	}
+
+	public static java.util.List<com.liferay.marketplace.model.App> getInstalledApps(
+		java.lang.String category)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return getService().getInstalledApps(category);
+	}
+
+	public static java.util.Map<java.lang.String, java.lang.String> getPrepackagedApps() {
+		return getService().getPrepackagedApps();
 	}
 
 	public static void installApp(long remoteAppId)
@@ -346,10 +352,10 @@ public class AppLocalServiceUtil {
 	}
 
 	public static com.liferay.marketplace.model.App updateApp(long userId,
-		long remoteAppId, java.lang.String version, java.io.File file)
+		java.io.File file)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return getService().updateApp(userId, remoteAppId, version, file);
+		return getService().updateApp(userId, file);
 	}
 
 	public static com.liferay.marketplace.model.App updateApp(long userId,

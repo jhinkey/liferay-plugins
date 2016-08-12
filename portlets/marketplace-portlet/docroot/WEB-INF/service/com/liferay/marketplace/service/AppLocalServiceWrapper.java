@@ -331,14 +331,21 @@ public class AppLocalServiceWrapper implements AppLocalService,
 	}
 
 	@Override
-	public java.util.Map<java.lang.String, java.lang.String> getBundledApps() {
-		return _appLocalService.getBundledApps();
-	}
-
-	@Override
 	public java.util.List<com.liferay.marketplace.model.App> getInstalledApps()
 		throws com.liferay.portal.kernel.exception.SystemException {
 		return _appLocalService.getInstalledApps();
+	}
+
+	@Override
+	public java.util.List<com.liferay.marketplace.model.App> getInstalledApps(
+		java.lang.String category)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _appLocalService.getInstalledApps(category);
+	}
+
+	@Override
+	public java.util.Map<java.lang.String, java.lang.String> getPrepackagedApps() {
+		return _appLocalService.getPrepackagedApps();
 	}
 
 	@Override
@@ -364,10 +371,10 @@ public class AppLocalServiceWrapper implements AppLocalService,
 
 	@Override
 	public com.liferay.marketplace.model.App updateApp(long userId,
-		long remoteAppId, java.lang.String version, java.io.File file)
+		java.io.File file)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException {
-		return _appLocalService.updateApp(userId, remoteAppId, version, file);
+		return _appLocalService.updateApp(userId, file);
 	}
 
 	@Override

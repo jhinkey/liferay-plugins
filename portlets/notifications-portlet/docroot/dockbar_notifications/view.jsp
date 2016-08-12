@@ -19,8 +19,8 @@
 <c:if test="<%= PortletPropsValues.USER_NOTIFICATIONS_DOCKBAR_DISPLAY_ENABLED %>">
 
 	<%
-	int newUserNotificationsCount = UserNotificationEventLocalServiceUtil.getDeliveredUserNotificationEventsCount(themeDisplay.getUserId(), false);
-	int unreadUserNotificationsCount = UserNotificationEventLocalServiceUtil.getArchivedUserNotificationEventsCount(themeDisplay.getUserId(), false);
+	int newUserNotificationsCount = NotificationsUtil.getDeliveredUserNotificationEventsCount(themeDisplay.getUserId(), false);
+	int unreadUserNotificationsCount = NotificationsUtil.getArchivedUserNotificationEventsCount(themeDisplay.getUserId(), false);
 
 	long notificationsPlid = themeDisplay.getPlid();
 
@@ -35,7 +35,7 @@
 	}
 	%>
 
-	<li class="dockbar-user-notifications dropdown toggle-controls" id="<portlet:namespace />userNotifications">
+	<li class="dockbar-user-notifications dropdown" id="<portlet:namespace />userNotifications">
 		<a class="dropdown-toggle user-notification-link" href="javascript:;">
 			<span class='user-notifications-count <%= (newUserNotificationsCount > 0) ? "alert" : StringPool.BLANK %>' id="<portlet:namespace />userNotificationsCount"><%= unreadUserNotificationsCount %></span>
 		</a>

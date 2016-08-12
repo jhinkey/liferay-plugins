@@ -200,6 +200,21 @@ public interface AssetEntrySetModel extends BaseModel<AssetEntrySet> {
 	public void setCreatorClassPK(long creatorClassPK);
 
 	/**
+	 * Returns the creator name of this asset entry set.
+	 *
+	 * @return the creator name of this asset entry set
+	 */
+	@AutoEscape
+	public String getCreatorName();
+
+	/**
+	 * Sets the creator name of this asset entry set.
+	 *
+	 * @param creatorName the creator name of this asset entry set
+	 */
+	public void setCreatorName(String creatorName);
+
+	/**
 	 * Returns the payload of this asset entry set.
 	 *
 	 * @return the payload of this asset entry set
@@ -262,6 +277,34 @@ public interface AssetEntrySetModel extends BaseModel<AssetEntrySet> {
 	 * @param privateAssetEntrySet the private asset entry set of this asset entry set
 	 */
 	public void setPrivateAssetEntrySet(boolean privateAssetEntrySet);
+
+	/**
+	 * Returns the sticky time of this asset entry set.
+	 *
+	 * @return the sticky time of this asset entry set
+	 */
+	public long getStickyTime();
+
+	/**
+	 * Sets the sticky time of this asset entry set.
+	 *
+	 * @param stickyTime the sticky time of this asset entry set
+	 */
+	public void setStickyTime(long stickyTime);
+
+	/**
+	 * Returns the type of this asset entry set.
+	 *
+	 * @return the type of this asset entry set
+	 */
+	public int getType();
+
+	/**
+	 * Sets the type of this asset entry set.
+	 *
+	 * @param type the type of this asset entry set
+	 */
+	public void setType(int type);
 
 	@Override
 	public boolean isNew();

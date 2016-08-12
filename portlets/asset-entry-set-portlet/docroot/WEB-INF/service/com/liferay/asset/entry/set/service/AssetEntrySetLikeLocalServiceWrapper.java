@@ -290,12 +290,19 @@ public class AssetEntrySetLikeLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.json.JSONArray getLikedParticipantFullNames(
-		long userId, long assetEntrySetId, int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
-		return _assetEntrySetLikeLocalService.getLikedParticipantFullNames(userId,
-			assetEntrySetId, start, end);
+	public com.liferay.asset.entry.set.model.AssetEntrySetLike fetchAssetEntrySetLike(
+		long assetEntrySetId, long classNameId, long classPK)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetEntrySetLikeLocalService.fetchAssetEntrySetLike(assetEntrySetId,
+			classNameId, classPK);
+	}
+
+	@Override
+	public java.util.List<com.liferay.asset.entry.set.model.AssetEntrySetLike> getAssetEntrySetLikes(
+		long assetEntrySetId, long classNameId, long classPK, int start, int end)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _assetEntrySetLikeLocalService.getAssetEntrySetLikes(assetEntrySetId,
+			classNameId, classPK, start, end);
 	}
 
 	/**

@@ -24,23 +24,35 @@ html = <<-EOF
 <script type="text/javascript">
 	// <![CDATA[
 		function #{namespace}execute() {
-			var content = #{namespace}consoleInput.getCode();
+			AUI().use(
+				'aui-node', 'aui-io-request',
+				function(A) {
+					var content = A.one('textarea##{namespace}consoleInput').get('value');
 
-			jQuery.get(
-				'#{$renderResponse.createResourceURL}',
-				{
-					#{namespace}cmd: "exec",
-					#{namespace}consoleInput: content
-				},
-				function(data) {
-					if (!data.match(/^@ERROR@$/m) && document.#{namespace}fm.#{namespace}outputMode.checked) {
-						jQuery("\##{namespace}consoleOutput").empty().append(data);
-					}
-					else {
-						jQuery("\##{namespace}consoleOutput").empty().text(data);
-					}
-				}
-			);
+					A.io.request(
+						'#{$renderResponse.createResourceURL}',
+						{
+							data:{
+								#{namespace}cmd: 'exec',
+								#{namespace}consoleInput: content,
+								p_auth: Liferay.authToken
+							},
+							dataType: 'json',
+							method: 'POST',
+							on: {
+								success: function() {
+									var data = this.get('responseData');
+
+									if (!data.match(/^@ERROR@$/m) && document.#{namespace}fm.#{namespace}outputMode.checked) {
+										A.one('##{namespace}consoleOutput').empty().append(data);
+									}
+									else {
+										A.one('##{namespace}consoleOutput').empty().text(data);
+									}
+								}
+							}
+						});
+				});
 
 			return false;
 		}
@@ -52,7 +64,7 @@ html = <<-EOF
 
 	<br />
 
-	<textarea class="codepress ruby" id="#{namespace}consoleInput" name="#{namespace}consoleInput" style="height: 300px; width: 98%;" wrap="off">
+	<textarea id="#{namespace}consoleInput" name="#{namespace}consoleInput" style="height: 300px; width: 98%;" wrap="off">
 \$resourceResponse.setContentType "text/html"
 
 out = $resourceResponse.getPortletOutputStream
@@ -77,7 +89,6 @@ out.println `date`
 	<pre id="#{namespace}consoleOutput"><!--//--></pre>
 </form>
 
-<script src="#{themeDisplay.getPathContext}/html/js/editor/codepress/codepress.js" type="text/javascript"></script>
 EOF
 
 out.print html

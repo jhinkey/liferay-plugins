@@ -189,6 +189,21 @@ public interface SyncDLObjectModel extends BaseModel<SyncDLObject> {
 	public void setParentFolderId(long parentFolderId);
 
 	/**
+	 * Returns the tree path of this sync d l object.
+	 *
+	 * @return the tree path of this sync d l object
+	 */
+	@AutoEscape
+	public String getTreePath();
+
+	/**
+	 * Sets the tree path of this sync d l object.
+	 *
+	 * @param treePath the tree path of this sync d l object
+	 */
+	public void setTreePath(String treePath);
+
+	/**
 	 * Returns the name of this sync d l object.
 	 *
 	 * @return the name of this sync d l object
@@ -352,6 +367,20 @@ public interface SyncDLObjectModel extends BaseModel<SyncDLObject> {
 	public void setEvent(String event);
 
 	/**
+	 * Returns the last permission change date of this sync d l object.
+	 *
+	 * @return the last permission change date of this sync d l object
+	 */
+	public Date getLastPermissionChangeDate();
+
+	/**
+	 * Sets the last permission change date of this sync d l object.
+	 *
+	 * @param lastPermissionChangeDate the last permission change date of this sync d l object
+	 */
+	public void setLastPermissionChangeDate(Date lastPermissionChangeDate);
+
+	/**
 	 * Returns the lock expiration date of this sync d l object.
 	 *
 	 * @return the lock expiration date of this sync d l object
@@ -490,19 +519,19 @@ public interface SyncDLObjectModel extends BaseModel<SyncDLObject> {
 	public Object clone();
 
 	@Override
-	public int compareTo(SyncDLObject syncDLObject);
+	public int compareTo(com.liferay.sync.model.SyncDLObject syncDLObject);
 
 	@Override
 	public int hashCode();
 
 	@Override
-	public CacheModel<SyncDLObject> toCacheModel();
+	public CacheModel<com.liferay.sync.model.SyncDLObject> toCacheModel();
 
 	@Override
-	public SyncDLObject toEscapedModel();
+	public com.liferay.sync.model.SyncDLObject toEscapedModel();
 
 	@Override
-	public SyncDLObject toUnescapedModel();
+	public com.liferay.sync.model.SyncDLObject toUnescapedModel();
 
 	@Override
 	public String toString();

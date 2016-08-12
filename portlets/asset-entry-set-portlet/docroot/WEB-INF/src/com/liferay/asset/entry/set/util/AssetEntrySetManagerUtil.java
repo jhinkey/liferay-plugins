@@ -90,10 +90,10 @@ public class AssetEntrySetManagerUtil {
 	}
 
 	public static JSONObject interpret(
-			JSONObject jsonObject, long assetEntrySetId)
+			long userId, long assetEntrySetId, JSONObject payloadJSONObject)
 		throws PortalException, SystemException {
 
-		String type = jsonObject.getString("type");
+		String type = payloadJSONObject.getString("type");
 
 		String portletId = _assetEntrySetPortletIds.get(type);
 
@@ -104,7 +104,8 @@ public class AssetEntrySetManagerUtil {
 			return null;
 		}
 
-		return assetEntrySetHandler.interpret(jsonObject, assetEntrySetId);
+		return assetEntrySetHandler.interpret(
+			userId, assetEntrySetId, payloadJSONObject);
 	}
 
 	private static Map<String, AssetEntrySetHandler> _assetEntrySetHandlers =

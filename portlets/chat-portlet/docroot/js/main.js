@@ -12,6 +12,8 @@ AUI().use(
 		var LString = Lang.String;
 		var Notification = A.config.win.Notification;
 
+		var windowId = Liferay.Util.randomInt();
+
 		var now = Lang.now;
 
 		var DOC = A.config.doc;
@@ -698,6 +700,33 @@ AUI().use(
 
 				instance._createBuddyListPanel();
 				instance._createSettingsPanel();
+
+				var storageFn = function(event) {
+					var newValue = JSON.parse(event.newValue);
+
+					if (newValue) {
+						var key = newValue.windowId;
+
+						if (key && key != windowId) {
+							var entry = newValue.entry;
+
+							if (entry) {
+								instance._updateConversations([entry], key);
+							}
+						}
+					}
+				};
+
+				AUI.Env.add(window, 'storage', storageFn);
+
+				A.getWin().on(
+					'beforeunload',
+					function(event) {
+						AUI.Env.remove(window, 'storage', storageFn);
+
+						localStorage.setItem('liferay.chat.messages', null);
+					}
+				);
 			},
 
 			getContainer: function() {
@@ -1219,15 +1248,13 @@ AUI().use(
 
 				var entries = response.entries;
 
-				if (instance._initialRequest) {
+				if (instance._initialRequest && response.initialRequest) {
 					instance._loadCache(entries);
 
-					if (instance._openPanelId.length) {
-						var openPanelId = parseInt(instance._openPanelId, 10);
+					var openPanelId = instance._openPanelId;
 
-						if (!isNaN(openPanelId)) {
-							instance._createChatFromUser(instance._openPanelId);
-						}
+					if (openPanelId && Lang.isNumber(Number(openPanelId))) {
+						instance._createChatFromUser(openPanelId);
 					}
 
 					instance._restoreMinimizedPanels();
@@ -1238,8 +1265,8 @@ AUI().use(
 
 					instance._initialRequest = false;
 				}
-				else {
-					instance._updateConversations(entries);
+				else if (!instance._initialRequest) {
+					instance._updateConversations(entries, windowId);
 				}
 			},
 
@@ -1356,7 +1383,7 @@ AUI().use(
 				buddyList.setTitle(title);
 			},
 
-			_updateConversations: function(entries) {
+			_updateConversations: function(entries, key) {
 				var instance = this;
 
 				var entriesLength = entries.length;
@@ -1371,8 +1398,20 @@ AUI().use(
 					var entryProcessed = (entryIds.indexOf('|' + entry.entryId) > -1);
 
 					if (!entryProcessed) {
-						var userId = entry.toUserId;
+						if (entry.content.length) {
+							localStorage.setItem(
+								'liferay.chat.messages',
+								JSON.stringify(
+									{
+										entry: entry,
+										windowId: windowId
+									}
+								)
+							);
+						}
+
 						var incoming = false;
+						var userId = entry.toUserId;
 
 						if (entry.fromUserId != currentUserId) {
 							userId = entry.fromUserId;
@@ -1381,7 +1420,7 @@ AUI().use(
 
 						var buddy = instance._buddies[userId];
 
-						if (buddy && incoming) {
+						if (buddy && (incoming || key != windowId)) {
 							var chat = instance._chatSessions[userId];
 
 							if (!chat && entry.content) {

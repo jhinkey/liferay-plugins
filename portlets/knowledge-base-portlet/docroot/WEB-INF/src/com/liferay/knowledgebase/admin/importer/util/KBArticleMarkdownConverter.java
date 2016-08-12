@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.zip.ZipReader;
+import com.liferay.portal.model.ModelHintsUtil;
 import com.liferay.portlet.documentlibrary.util.DLUtil;
 
 import java.io.IOException;
@@ -66,10 +67,15 @@ public class KBArticleMarkdownConverter {
 
 		if (Validator.isNull(heading)) {
 			throw new KBArticleImportException(
-				"Unable to extract heading from converted HTML: " + html);
+				"Unable to extract title heading from file: " + fileEntryName);
 		}
 
 		_urlTitle = getUrlTitle(heading);
+
+		if (Validator.isNull(_urlTitle)) {
+			throw new KBArticleImportException(
+				"Missing title heading ID in file: " + fileEntryName);
+		}
 
 		_title = HtmlUtil.unescape(stripIds(heading));
 
@@ -242,6 +248,11 @@ public class KBArticleMarkdownConverter {
 		String urlTitle = null;
 
 		int x = heading.indexOf("[](id=");
+
+		if (x == -1) {
+			return null;
+		}
+
 		int y = heading.indexOf(StringPool.CLOSE_PARENTHESIS, x);
 
 		if (y > (x + 1)) {
@@ -250,13 +261,31 @@ public class KBArticleMarkdownConverter {
 			urlTitle = heading.substring(equalsSign + 1, y);
 
 			urlTitle = StringUtil.replace(
-				urlTitle, StringPool.SPACE, StringPool.DASH);
+				urlTitle, CharPool.SPACE, CharPool.DASH);
 
 			urlTitle = StringUtil.toLowerCase(urlTitle);
 		}
 
+		if (urlTitle == null) {
+			return null;
+		}
+
 		if (!urlTitle.startsWith(StringPool.SLASH)) {
 			urlTitle = StringPool.SLASH + urlTitle;
+		}
+
+		int urlTitleMaxLength = ModelHintsUtil.getMaxLength(
+			KBArticle.class.getName(), "urlTitle");
+
+		while (urlTitle.length() > urlTitleMaxLength) {
+			int pos = urlTitle.lastIndexOf(StringPool.DASH);
+
+			if (pos == -1) {
+				urlTitle = urlTitle.substring(0, urlTitleMaxLength);
+			}
+			else {
+				urlTitle = urlTitle.substring(0, pos);
+			}
 		}
 
 		return urlTitle;

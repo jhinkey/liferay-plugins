@@ -364,8 +364,27 @@
 	margin-top: -1em;
 }
 
+.scheduler-base-content > .yui3-widget-bd {
+	border: 1px solid #DDD;
+
+	.scheduler-base-view-date {
+		display: block;
+		font-size: 18px;
+		margin-top: 13px;
+		text-align: center;
+	}
+
+	.scheduler-view {
+		border-width: 0;
+	}
+}
+
 .scheduler-base-controls .calendar-add-event-btn {
 	margin-right: 3px;
+}
+
+.scheduler-base-hd .scheduler-base-controls .scheduler-base-today {
+	margin-right: 0;
 }
 
 .scheduler-event-past {
@@ -394,6 +413,38 @@
 	margin-top: 5px;
 }
 
+.scheduler-view .scheduler-view-agenda-container, .scheduler-view .scheduler-view-agenda-info-container {
+	border-bottom: 1px solid #E4E4E4;
+	border-width: 0;
+	font-size: 1em;
+	margin: 0;
+
+	.scheduler-view-agenda-info {
+		.scheduler-view-agenda-info-biggie {
+			background: #FFF;
+			padding: 5px 8px;
+			width: 65px;
+		}
+
+		.scheduler-view-agenda-info-label {
+			padding: 10px 0 10px 8px;
+		}
+	}
+
+	.scheduler-view-agenda-no-events {
+		background: #F6F6F6;
+		text-align: center;
+	}
+}
+
+.scheduler-view-agenda {
+	margin-top: -13px;
+}
+
+.scheduler-view-content .scheduler-view-scrollable {
+	overflow-y: auto;
+}
+
 .scheduler-view-day .scheduler-view-table .scheduler-view-table-data-col {
 	padding-top: 5px;
 }
@@ -402,12 +453,32 @@
 	padding-top: 4px;
 }
 
-.scheduler-view-day-header-day a {
-	padding: 2px;
+.scheduler-view-day-header-col .scheduler-view-day-header-day {
+	a, span {
+		font-size: 14px;
+
+		@include respond-to(phone) {
+			display: block;
+		}
+	}
+}
+
+.scheduler-view-day:not(.scheduler-view-week) .scheduler-view-day-header-day span {
+	display: none;
+}
+
+.scheduler-view-table-header-table .scheduler-view-table-header-col .scheduler-view-table-header-day div {
+	font-size: 14px;
+	padding: 6px 0 2px 0;
 }
 
 .scheduler-view-table-data-event {
 	padding: 0 3px 0 3px;
+}
+
+.scheduler-view-table-events-overlay-node {
+	max-height: 500px;
+	overflow-y: auto;
 }
 
 .simple-menu {
@@ -538,6 +609,10 @@
 }
 
 /* ---------- Extras ---------- */
+
+.scheduler-view .scheduler-view-agenda-container, .scheduler-view .scheduler-view-agenda-info-container {
+	@include border-radius(0);
+}
 
 .scheduler-event-recorder-content {
 	@include background-image(linear-gradient(top, #F7F7F7, #FFF));

@@ -39,10 +39,13 @@ public class AssetEntrySetSoap implements Serializable {
 		soapModel.setParentAssetEntrySetId(model.getParentAssetEntrySetId());
 		soapModel.setCreatorClassNameId(model.getCreatorClassNameId());
 		soapModel.setCreatorClassPK(model.getCreatorClassPK());
+		soapModel.setCreatorName(model.getCreatorName());
 		soapModel.setPayload(model.getPayload());
 		soapModel.setChildAssetEntrySetsCount(model.getChildAssetEntrySetsCount());
 		soapModel.setAssetEntrySetLikesCount(model.getAssetEntrySetLikesCount());
 		soapModel.setPrivateAssetEntrySet(model.getPrivateAssetEntrySet());
+		soapModel.setStickyTime(model.getStickyTime());
+		soapModel.setType(model.getType());
 
 		return soapModel;
 	}
@@ -167,6 +170,14 @@ public class AssetEntrySetSoap implements Serializable {
 		_creatorClassPK = creatorClassPK;
 	}
 
+	public String getCreatorName() {
+		return _creatorName;
+	}
+
+	public void setCreatorName(String creatorName) {
+		_creatorName = creatorName;
+	}
+
 	public String getPayload() {
 		return _payload;
 	}
@@ -203,6 +214,22 @@ public class AssetEntrySetSoap implements Serializable {
 		_privateAssetEntrySet = privateAssetEntrySet;
 	}
 
+	public long getStickyTime() {
+		return _stickyTime;
+	}
+
+	public void setStickyTime(long stickyTime) {
+		_stickyTime = stickyTime;
+	}
+
+	public int getType() {
+		return _type;
+	}
+
+	public void setType(int type) {
+		_type = type;
+	}
+
 	private long _assetEntrySetId;
 	private long _companyId;
 	private long _userId;
@@ -212,8 +239,11 @@ public class AssetEntrySetSoap implements Serializable {
 	private long _parentAssetEntrySetId;
 	private long _creatorClassNameId;
 	private long _creatorClassPK;
+	private String _creatorName;
 	private String _payload;
 	private int _childAssetEntrySetsCount;
 	private int _assetEntrySetLikesCount;
 	private boolean _privateAssetEntrySet;
+	private long _stickyTime;
+	private int _type;
 }

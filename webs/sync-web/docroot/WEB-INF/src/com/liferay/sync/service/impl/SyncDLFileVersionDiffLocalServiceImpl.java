@@ -16,13 +16,12 @@ package com.liferay.sync.service.impl;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.model.Company;
-import com.liferay.portal.model.Group;
 import com.liferay.portal.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.util.PortletKeys;
 import com.liferay.portlet.documentlibrary.model.DLFolderConstants;
@@ -56,18 +55,16 @@ public class SyncDLFileVersionDiffLocalServiceImpl
 		syncDLFileVersionDiff.setSourceFileVersionId(sourceFileVersionId);
 		syncDLFileVersionDiff.setTargetFileVersionId(targetFileVersionId);
 
-		Company company = companyLocalService.getCompanyByMx(
-			PropsUtil.get(PropsKeys.COMPANY_DEFAULT_WEB_ID));
+		FileEntry fileEntry = dlAppLocalService.getFileEntry(fileEntryId);
 
-		Group group = company.getGroup();
-
-		FileEntry fileEntry = dlAppService.getFileEntry(fileEntryId);
+		Company company = companyLocalService.getCompanyById(
+			fileEntry.getCompanyId());
 
 		String dataFileName = getDataFileName(
 			fileEntryId, sourceFileVersionId, targetFileVersionId);
 
 		FileEntry dataFileEntry = PortletFileRepositoryUtil.addPortletFileEntry(
-			group.getGroupId(), fileEntry.getUserId(),
+			company.getGroupId(), fileEntry.getUserId(),
 			SyncDLFileVersionDiff.class.getName(),
 			syncDLFileVersionDiff.getSyncDLFileVersionDiffId(),
 			PortletKeys.DOCUMENT_LIBRARY,
@@ -112,8 +109,17 @@ public class SyncDLFileVersionDiffLocalServiceImpl
 			SyncDLFileVersionDiff syncDLFileVersionDiff)
 		throws PortalException, SystemException {
 
-		PortletFileRepositoryUtil.deletePortletFileEntry(
-			syncDLFileVersionDiff.getDataFileEntryId());
+		try {
+			PortletFileRepositoryUtil.deletePortletFileEntry(
+				syncDLFileVersionDiff.getDataFileEntryId());
+		}
+		catch (Exception e) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to delete file entry " +
+						syncDLFileVersionDiff.getDataFileEntryId());
+			}
+		}
 
 		return super.deleteSyncDLFileVersionDiff(syncDLFileVersionDiff);
 	}
@@ -175,5 +181,8 @@ public class SyncDLFileVersionDiffLocalServiceImpl
 
 		return sb.toString();
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(
+		SyncDLFileVersionDiffLocalServiceImpl.class);
 
 }

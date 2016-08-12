@@ -105,7 +105,6 @@ String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 					keyProperty="kbFolderId"
 					modelVar="kbFolder"
 				>
-
 					<liferay-portlet:renderURL var="rowURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 						<portlet:param name="mvcPath" value='<%= templatePath + "select_parent.jsp" %>' />
 						<portlet:param name="resourceClassNameId" value="<%= String.valueOf(resourceClassNameId) %>" />
@@ -163,7 +162,6 @@ String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 							value="choose"
 						/>
 					</liferay-ui:search-container-column-text>
-
 				</liferay-ui:search-container-row>
 
 				<liferay-ui:search-iterator />

@@ -14,6 +14,7 @@
 
 package com.liferay.so.activities.hook.social;
 
+import com.liferay.compat.portal.kernel.util.Time;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
@@ -27,7 +28,6 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.Group;
 import com.liferay.portal.security.permission.ActionKeys;
@@ -51,13 +51,12 @@ import com.liferay.portlet.trash.util.TrashUtil;
 import com.liferay.portlet.wiki.model.WikiPageResource;
 import com.liferay.so.activities.util.PortletPropsValues;
 
+import java.text.DateFormat;
 import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * @author Brian Wing Shun Chan
@@ -199,11 +198,6 @@ public abstract class SOSocialActivityInterpreter
 		return activity.getCreateDate();
 	}
 
-	protected Format getFormatDateTime(Locale locale, TimeZone timezone) {
-		return FastDateFormatFactoryUtil.getSimpleDateFormat(
-			"EEEE, MMMMM dd, yyyy 'at' h:mm a", locale, timezone);
-	}
-
 	protected String getLink(
 			SocialActivitySet activitySet, ServiceContext serviceContext)
 		throws Exception {
@@ -217,9 +211,11 @@ public abstract class SOSocialActivityInterpreter
 
 		AssetRenderer assetRenderer = getAssetRenderer(className, classPK);
 
-		return assetRenderer.getURLViewInContext(
+		String url = assetRenderer.getURLViewInContext(
 			serviceContext.getLiferayPortletRequest(),
 			serviceContext.getLiferayPortletResponse(), null);
+
+		return addNoSuchEntryRedirect(url, className, classPK, serviceContext);
 	}
 
 	protected String getPageTitle(
@@ -326,8 +322,9 @@ public abstract class SOSocialActivityInterpreter
 
 		sb.append("</div><div class=\"activity-time\" title=\"");
 
-		Format dateFormatDate = getFormatDateTime(
-			serviceContext.getLocale(), serviceContext.getTimeZone());
+		Format dateFormatDate = FastDateFormatFactoryUtil.getDateTime(
+			DateFormat.FULL, DateFormat.SHORT, serviceContext.getLocale(),
+			serviceContext.getTimeZone());
 
 		Date activityDate = new Date(displayDate);
 
@@ -335,9 +332,13 @@ public abstract class SOSocialActivityInterpreter
 
 		sb.append("\">");
 
+		Format dateFormat = FastDateFormatFactoryUtil.getDate(
+			DateFormat.FULL, serviceContext.getLocale(),
+			serviceContext.getTimeZone());
+
 		String relativeTimeDescription = Time.getRelativeTimeDescription(
 			displayDate, serviceContext.getLocale(),
-			serviceContext.getTimeZone());
+			serviceContext.getTimeZone(), dateFormat);
 
 		sb.append(relativeTimeDescription);
 

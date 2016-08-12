@@ -22,10 +22,13 @@
 		<column name="parentAssetEntrySetId" type="long" />
 		<column name="creatorClassNameId" type="long" />
 		<column name="creatorClassPK" type="long" />
+		<column name="creatorName" type="String" />
 		<column name="payload" type="String" />
 		<column name="childAssetEntrySetsCount" type="int" />
 		<column name="assetEntrySetLikesCount" type="int" />
 		<column name="privateAssetEntrySet" type="boolean" />
+		<column name="stickyTime" type="long" />
+		<column name="type" type="int" />
 
 		<!-- Order -->
 
@@ -61,7 +64,7 @@
 		<reference package-path="com.liferay.portal" entity="Group" />
 		<reference package-path="com.liferay.portlet.asset" entity="AssetEntry" />
 	</entity>
-	<entity name="AssetEntrySetLike" local-service="true" remote-service="true">
+	<entity name="AssetEntrySetLike" local-service="true" remote-service="false">
 
 		<!-- PK fields -->
 

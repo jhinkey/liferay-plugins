@@ -16,7 +16,7 @@ package com.liferay.asset.entry.set.util;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 
 /**
@@ -30,6 +30,14 @@ public class AssetEntrySetParticipantInfoUtil {
 		return _assetEntrySetParticipantInfo;
 	}
 
+	public static JSONArray getAssetTagsJSONArray(
+			long userId, String[] assetTagNames)
+		throws PortalException, SystemException {
+
+		return getAssetEntrySetParticipantInfo().getAssetTagsJSONArray(
+			userId, assetTagNames);
+	}
+
 	public static ObjectValuePair<Long, Long> getClassNameIdAndClassPKOVP(
 			long userId)
 		throws SystemException {
@@ -38,14 +46,21 @@ public class AssetEntrySetParticipantInfoUtil {
 			userId);
 	}
 
-	public static JSONObject getParticipantJSONObject(
-			JSONObject participantJSONObject, long classNameId, long classPK,
-			boolean includeProfileImageURL)
+	public static String[] getMembershipSearchTerms(long userId) {
+		return getAssetEntrySetParticipantInfo().getMembershipSearchTerms(
+			userId);
+	}
+
+	public static String getParticipantName(long classNameId, long classPK)
 		throws PortalException, SystemException {
 
-		return getAssetEntrySetParticipantInfo().getParticipantJSONObject(
-			participantJSONObject, classNameId, classPK,
-			includeProfileImageURL);
+		return getAssetEntrySetParticipantInfo().getParticipantName(
+			classNameId, classPK);
+	}
+
+	public static String getSearchTerm(long classNameId, long classPK) {
+		return getAssetEntrySetParticipantInfo().getSearchTerm(
+			classNameId, classPK);
 	}
 
 	public static boolean isMember(
@@ -56,7 +71,7 @@ public class AssetEntrySetParticipantInfoUtil {
 			classNameId, classPK, sharedToClassNameId, sharedToClassPK);
 	}
 
-	public void setAssetEntrySetParticipantInfo(
+	public static void setAssetEntrySetParticipantInfo(
 		AssetEntrySetParticipantInfo assetEntrySetParticipantInfo) {
 
 		_assetEntrySetParticipantInfo = assetEntrySetParticipantInfo;

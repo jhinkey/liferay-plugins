@@ -15,6 +15,7 @@
 package com.liferay.calendar.service.impl;
 
 import com.liferay.calendar.CalendarBookingDurationException;
+import com.liferay.calendar.CalendarBookingRecurrenceException;
 import com.liferay.calendar.CalendarBookingTitleException;
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
@@ -137,7 +138,7 @@ public class CalendarBookingLocalServiceImpl
 
 		Date now = new Date();
 
-		validate(titleMap, startTimeJCalendar, endTimeJCalendar);
+		validate(titleMap, startTimeJCalendar, endTimeJCalendar, recurrence);
 
 		CalendarBooking calendarBooking = calendarBookingPersistence.create(
 			calendarBookingId);
@@ -165,8 +166,9 @@ public class CalendarBookingLocalServiceImpl
 		}
 
 		calendarBooking.setVEventUid(vEventUid);
-		calendarBooking.setTitleMap(titleMap);
-		calendarBooking.setDescriptionMap(descriptionMap);
+		calendarBooking.setTitleMap(titleMap, serviceContext.getLocale());
+		calendarBooking.setDescriptionMap(
+			descriptionMap, serviceContext.getLocale());
 		calendarBooking.setLocation(location);
 		calendarBooking.setStartTime(startTimeJCalendar.getTimeInMillis());
 		calendarBooking.setEndTime(endTimeJCalendar.getTimeInMillis());
@@ -372,6 +374,16 @@ public class CalendarBookingLocalServiceImpl
 			recurrenceObj.setUntilJCalendar(startTimeJCalendar);
 		}
 		else {
+			CalendarBooking calendarBookingInstance =
+				RecurrenceUtil.getCalendarBookingInstance(calendarBooking, 1);
+
+			if (calendarBookingInstance == null) {
+				calendarBookingLocalService.deleteCalendarBooking(
+					calendarBooking);
+
+				return;
+			}
+
 			recurrenceObj.addExceptionDate(startTimeJCalendar);
 		}
 
@@ -796,13 +808,14 @@ public class CalendarBookingLocalServiceImpl
 			firstReminder = originalSecondReminder;
 		}
 
-		validate(titleMap, startTimeJCalendar, endTimeJCalendar);
+		validate(titleMap, startTimeJCalendar, endTimeJCalendar, recurrence);
 
 		calendarBooking.setGroupId(calendar.getGroupId());
 		calendarBooking.setModifiedDate(serviceContext.getModifiedDate(null));
 		calendarBooking.setCalendarId(calendarId);
-		calendarBooking.setTitleMap(titleMap);
-		calendarBooking.setDescriptionMap(descriptionMap);
+		calendarBooking.setTitleMap(titleMap, serviceContext.getLocale());
+		calendarBooking.setDescriptionMap(
+			descriptionMap, serviceContext.getLocale());
 		calendarBooking.setLocation(location);
 		calendarBooking.setStartTime(startTimeJCalendar.getTimeInMillis());
 		calendarBooking.setEndTime(endTimeJCalendar.getTimeInMillis());
@@ -896,8 +909,10 @@ public class CalendarBookingLocalServiceImpl
 			calendarBooking, instanceIndex, allFollowing);
 
 		if (allFollowing) {
+			Calendar calendar = calendarLocalService.getCalendar(calendarId);
+
 			Recurrence recurrenceObj = RecurrenceSerializer.deserialize(
-				recurrence);
+				recurrence, calendar.getTimeZone());
 
 			if (oldRecurrence.equals(recurrence) &&
 				(recurrenceObj.getCount() > 0)) {
@@ -1193,7 +1208,7 @@ public class CalendarBookingLocalServiceImpl
 
 	protected void validate(
 			Map<Locale, String> titleMap, java.util.Calendar startTimeJCalendar,
-			java.util.Calendar endTimeJCalendar)
+			java.util.Calendar endTimeJCalendar, String recurrence)
 		throws PortalException {
 
 		if (Validator.isNull(titleMap) || titleMap.isEmpty()) {
@@ -1202,6 +1217,19 @@ public class CalendarBookingLocalServiceImpl
 
 		if (startTimeJCalendar.after(endTimeJCalendar)) {
 			throw new CalendarBookingDurationException();
+		}
+
+		if (Validator.isNull(recurrence)) {
+			return;
+		}
+
+		Recurrence recurrenceObj = RecurrenceSerializer.deserialize(
+			recurrence, startTimeJCalendar.getTimeZone());
+
+		if ((recurrenceObj.getUntilJCalendar() != null) &&
+			startTimeJCalendar.after(recurrenceObj.getUntilJCalendar())) {
+
+			throw new CalendarBookingRecurrenceException();
 		}
 	}
 

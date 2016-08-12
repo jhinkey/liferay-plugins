@@ -4,6 +4,15 @@
 <project name="plugins" basedir="." default="all" xmlns:antelope="antlib:ise.antelope.tasks">
 	<import file="build-common.xml" />
 
+	<condition property="plugins.includes.path" value="">
+		<or>
+			<equals arg1="${plugins.includes}" arg2="" />
+			<not>
+				<isset property="plugins.includes" />
+			</not>
+		</or>
+	</condition>
+
 	<path id="plugins.includes.path">
 		<dirset dir="apps/content-targeting" excludes="${plugins.excludes}" includes="${plugins.includes}" />
 		<dirset dir="hooks" excludes="${plugins.excludes}" includes="${plugins.includes}" />
@@ -48,7 +57,7 @@
 						<include name="**/liferay-plugin-package.properties" />
 					</fileset>
 				</copy>
-			</then> 
+			</then>
 			<else>
 				<java
 					classname="com.liferay.portal.tools.PluginsSummaryBuilder"
@@ -180,7 +189,7 @@
 		<zip destfile="dist/liferay-plugins-sdk-${lp.version}.zip">
 			<zipfileset
 				dir="."
-				excludes="*.iml,.bnd/**,.git/**,.gradle/**,.ivy/**,build.*.properties,dependencies/**/ivy.xml.MD5,dependencies/**/lib/**,dist/**,ext/*-ext/**,hooks/*-hook/**,lib/**,ivy.xml.MD5,layouttpl/*-layouttpl/**,portlets/*-portlet/**,private-plugins.txt,shared/*-shared/**,source_formatter_*,suites/**,summary.*,themes/*-theme/**,tools/node-*/**,webs/*-web/**"
+				excludes="*.iml,.bnd/**,.git/**,.ivy/**,build.*.properties,dependencies/**/ivy.xml.MD5,dependencies/**/lib/**,dist/**,ext/*-ext/**,hooks/*-hook/**,lib/**,ivy.xml.MD5,layouttpl/*-layouttpl/**,portlets/*-portlet/**,private-plugins.txt,shared/*-shared/**,source_formatter_*,suites/**,summary.*,themes/*-theme/**,tmp/**,tools/node-*/**,webs/*-web/**"
 				prefix="liferay-plugins-sdk-${lp.version}"
 			/>
 			<zipfileset

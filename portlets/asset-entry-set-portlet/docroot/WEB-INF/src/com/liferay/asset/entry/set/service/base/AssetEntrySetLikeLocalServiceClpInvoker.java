@@ -114,17 +114,23 @@ public class AssetEntrySetLikeLocalServiceClpInvoker {
 				"com.liferay.asset.entry.set.model.AssetEntrySetLike"
 			};
 
-		_methodName50 = "getBeanIdentifier";
+		_methodName48 = "getBeanIdentifier";
 
-		_methodParameterTypes50 = new String[] {  };
+		_methodParameterTypes48 = new String[] {  };
 
-		_methodName51 = "setBeanIdentifier";
+		_methodName49 = "setBeanIdentifier";
 
-		_methodParameterTypes51 = new String[] { "java.lang.String" };
+		_methodParameterTypes49 = new String[] { "java.lang.String" };
 
-		_methodName56 = "getLikedParticipantFullNames";
+		_methodName54 = "fetchAssetEntrySetLike";
 
-		_methodParameterTypes56 = new String[] { "long", "long", "int", "int" };
+		_methodParameterTypes54 = new String[] { "long", "long", "long" };
+
+		_methodName55 = "getAssetEntrySetLikes";
+
+		_methodParameterTypes55 = new String[] {
+				"long", "long", "long", "int", "int"
+			};
 	}
 
 	public Object invokeMethod(String name, String[] parameterTypes,
@@ -216,24 +222,32 @@ public class AssetEntrySetLikeLocalServiceClpInvoker {
 			return AssetEntrySetLikeLocalServiceUtil.updateAssetEntrySetLike((com.liferay.asset.entry.set.model.AssetEntrySetLike)arguments[0]);
 		}
 
-		if (_methodName50.equals(name) &&
-				Arrays.deepEquals(_methodParameterTypes50, parameterTypes)) {
+		if (_methodName48.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes48, parameterTypes)) {
 			return AssetEntrySetLikeLocalServiceUtil.getBeanIdentifier();
 		}
 
-		if (_methodName51.equals(name) &&
-				Arrays.deepEquals(_methodParameterTypes51, parameterTypes)) {
+		if (_methodName49.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes49, parameterTypes)) {
 			AssetEntrySetLikeLocalServiceUtil.setBeanIdentifier((java.lang.String)arguments[0]);
 
 			return null;
 		}
 
-		if (_methodName56.equals(name) &&
-				Arrays.deepEquals(_methodParameterTypes56, parameterTypes)) {
-			return AssetEntrySetLikeLocalServiceUtil.getLikedParticipantFullNames(((Long)arguments[0]).longValue(),
+		if (_methodName54.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes54, parameterTypes)) {
+			return AssetEntrySetLikeLocalServiceUtil.fetchAssetEntrySetLike(((Long)arguments[0]).longValue(),
 				((Long)arguments[1]).longValue(),
-				((Integer)arguments[2]).intValue(),
-				((Integer)arguments[3]).intValue());
+				((Long)arguments[2]).longValue());
+		}
+
+		if (_methodName55.equals(name) &&
+				Arrays.deepEquals(_methodParameterTypes55, parameterTypes)) {
+			return AssetEntrySetLikeLocalServiceUtil.getAssetEntrySetLikes(((Long)arguments[0]).longValue(),
+				((Long)arguments[1]).longValue(),
+				((Long)arguments[2]).longValue(),
+				((Integer)arguments[3]).intValue(),
+				((Integer)arguments[4]).intValue());
 		}
 
 		throw new UnsupportedOperationException();
@@ -271,10 +285,12 @@ public class AssetEntrySetLikeLocalServiceClpInvoker {
 	private String[] _methodParameterTypes14;
 	private String _methodName15;
 	private String[] _methodParameterTypes15;
-	private String _methodName50;
-	private String[] _methodParameterTypes50;
-	private String _methodName51;
-	private String[] _methodParameterTypes51;
-	private String _methodName56;
-	private String[] _methodParameterTypes56;
+	private String _methodName48;
+	private String[] _methodParameterTypes48;
+	private String _methodName49;
+	private String[] _methodParameterTypes49;
+	private String _methodName54;
+	private String[] _methodParameterTypes54;
+	private String _methodName55;
+	private String[] _methodParameterTypes55;
 }

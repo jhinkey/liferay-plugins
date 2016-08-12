@@ -38,6 +38,8 @@ import com.liferay.portal.kernel.search.facet.collector.FacetCollector;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
@@ -76,6 +78,9 @@ import org.apache.solr.common.params.FacetParams;
  */
 public class SolrIndexSearcher extends BaseIndexSearcher {
 
+	public static final int INDEX_SEARCH_LIMIT = GetterUtil.getInteger(
+		PropsUtil.get(PropsKeys.INDEX_SEARCH_LIMIT));
+
 	@Override
 	public Hits search(SearchContext searchContext, Query query)
 		throws SearchException {
@@ -86,6 +91,10 @@ public class SolrIndexSearcher extends BaseIndexSearcher {
 
 		try {
 			int total = (int)searchCount(searchContext, query);
+
+			if (total > INDEX_SEARCH_LIMIT) {
+				total = INDEX_SEARCH_LIMIT;
+			}
 
 			int start = searchContext.getStart();
 			int end = searchContext.getEnd();
@@ -109,6 +118,7 @@ public class SolrIndexSearcher extends BaseIndexSearcher {
 			Hits hits = processQueryResponse(
 				queryResponse, searchContext, query);
 
+			hits.setLength(total);
 			hits.setStart(stopWatch.getStartTime());
 
 			return hits;

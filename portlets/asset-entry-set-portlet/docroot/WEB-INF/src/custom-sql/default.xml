@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <custom-sql>
-	<sql id="com.liferay.asset.entry.set.service.persistence.AssetEntrySetFinder.findByCT_PAESI_CNI">
+	<sql id="com.liferay.asset.entry.set.service.persistence.AssetEntrySetFinder.findByCT_PAESI_ST_CNI">
 		<![CDATA[
 			SELECT
 				DISTINCT {AssetEntrySet.*}
@@ -14,11 +14,52 @@
 			WHERE
 				(AssetEntrySet.createTime [$CREATE_TIME_COMPARATOR$] ?) AND
 				(AssetEntrySet.parentAssetEntrySetId = ?) AND
+				(AssetEntrySet.stickyTime < ?) AND
 				(AssetSharingEntry1.classNameId = ?) AND
-				(
-					[$SHARED_TO$]
-					[$ASSET_TAG_NAMES$]
-				)
+				([$WHERE$])
+				[$EXCLUDE_ASSET_ENTRY_SET_IDS$]
+			ORDER BY
+				AssetEntrySet.createTime DESC
+		]]>
+	</sql>
+	<sql id="com.liferay.asset.entry.set.service.persistence.AssetEntrySetFinder.findByMT_PAESI_ST_CNI">
+		<![CDATA[
+			SELECT
+				DISTINCT {AssetEntrySet.*}
+			FROM
+				AssetEntrySet
+			INNER JOIN
+				AssetSharingEntry AS AssetSharingEntry1 ON
+					(AssetSharingEntry1.classPK = AssetEntrySet.assetEntrySetId)
+			[$JOIN_BY$]
+			WHERE
+				(AssetEntrySet.modifiedTime [$MODIFIED_TIME_COMPARATOR$] ?) AND
+				(AssetEntrySet.parentAssetEntrySetId = ?) AND
+				(AssetEntrySet.stickyTime < ?) AND
+				(AssetSharingEntry1.classNameId = ?) AND
+				([$WHERE$])
+				[$EXCLUDE_ASSET_ENTRY_SET_IDS$]
+			ORDER BY
+				AssetEntrySet.modifiedTime DESC
+		]]>
+	</sql>
+	<sql id="com.liferay.asset.entry.set.service.persistence.AssetEntrySetFinder.findByCT_PAESI_ST_T_CNI">
+		<![CDATA[
+			SELECT
+				DISTINCT {AssetEntrySet.*}
+			FROM
+				AssetEntrySet
+			INNER JOIN
+				AssetSharingEntry AS AssetSharingEntry1 ON
+					(AssetSharingEntry1.classPK = AssetEntrySet.assetEntrySetId)
+			[$JOIN_BY$]
+			WHERE
+				(AssetEntrySet.createTime [$CREATE_TIME_COMPARATOR$] ?) AND
+				(AssetEntrySet.parentAssetEntrySetId = ?) AND
+				(AssetEntrySet.stickyTime >= ?) AND
+				(AssetEntrySet.type_ = ?) AND
+				(AssetSharingEntry1.classNameId = ?) AND
+				([$WHERE$])
 			ORDER BY
 				AssetEntrySet.createTime DESC
 		]]>

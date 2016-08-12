@@ -16,6 +16,7 @@ package com.liferay.urlmetadatascraper.util;
 
 import java.awt.image.BufferedImage;
 
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 import java.util.ArrayList;
@@ -37,17 +38,26 @@ import org.jsoup.select.Elements;
  */
 public class URLMetadataScraperProcessor {
 
-	public String getURLMetadataJSON(String url) throws Exception {
+	public String getURLMetadataJSON(String url, String userAgent)
+		throws Exception {
+
 		JSONObject jsonObject = new JSONObject();
 
 		Document document = null;
 
+		String protocol =
+			HttpUtil.getProtocol(url) + HttpUtil.PROTOCOL_DELIMITER;
+
 		try {
-			url =
-				HttpUtil.getProtocol(url) + HttpUtil.PROTOCOL_DELIMITER +
-					HttpUtil.removeProtocol(url);
+			url = protocol + HttpUtil.removeProtocol(url);
 
 			Connection connection = Jsoup.connect(url);
+
+			if (Validator.isNull(userAgent)) {
+				userAgent = _USER_AGENT_DEFAULT;
+			}
+
+			connection.userAgent(userAgent);
 
 			document = connection.get();
 		}
@@ -57,7 +67,7 @@ public class URLMetadataScraperProcessor {
 			return jsonObject.toString();
 		}
 
-		String title = getTitle(document);
+		String title = getContent(document, _SELECTORS_TITLE);
 
 		if (Validator.isNull(title)) {
 			jsonObject.put("success", false);
@@ -65,8 +75,14 @@ public class URLMetadataScraperProcessor {
 			return jsonObject.toString();
 		}
 
-		jsonObject.put("description", getDescription(document));
-		jsonObject.put("imageURLs", getImageURLs(document));
+		jsonObject.put(
+			"description",
+			StringUtil.shorten(
+				getContent(document, _SELECTORS_DESCRIPTION),
+				_DESCRIPTION_LENGTH_MAXIMUM));
+		jsonObject.put(
+			"imageURLs", getImageURLs(document, protocol, userAgent));
+		jsonObject.put("videoURL", getContent(document, _SELECTORS_VIDEO_URL_));
 
 		String domain = "";
 
@@ -88,38 +104,48 @@ public class URLMetadataScraperProcessor {
 		return jsonObject.toString();
 	}
 
-	protected String getDescription(Document document) {
-		Elements descriptionElements = document.select(
-			"meta[property=og:description]");
+	protected String getContent(Document document, String[] selectors) {
+		String content = "";
 
-		if (descriptionElements.isEmpty()) {
-			descriptionElements = document.select("meta[name=description]");
-		}
+		for (String selector : selectors) {
+			Elements elements = document.select(selector);
 
-		String description = descriptionElements.attr("content");
+			if (selector.equals("title")) {
+				content = elements.html();
+			}
+			else {
+				content = elements.attr("content");
+			}
 
-		return StringUtil.shorten(description, 200);
-	}
-
-	protected List<String> getImageURLs(Document document) throws Exception {
-		List<String> imageURLs = new ArrayList<String>();
-
-		Elements imageElements = document.select("meta[property=og:image]");
-
-		if (!imageElements.isEmpty()) {
-			String imageURL = imageElements.attr("content");
-
-			if (isValidImageURL(imageURL)) {
-				imageURLs.add(imageURL);
+			if (Validator.isNotNull(content)) {
+				return content;
 			}
 		}
 
-		imageElements = document.select("img");
+		return "";
+	}
+
+	protected List<String> getImageURLs(
+			Document document, String protocol, String userAgent)
+		throws Exception {
+
+		List<String> imageURLs = new ArrayList<String>();
+
+		String imageURL = getContent(document, _SELECTORS_IMAGE);
+
+		if (isValidImageURL(imageURL, protocol, userAgent)) {
+			imageURLs.add(imageURL);
+		}
+
+		Elements imageElements = document.select("img");
 
 		for (Element imageElement : imageElements) {
-			String imageURL = imageElement.absUrl("src");
+			imageURL = imageElement.absUrl("src");
 
-			if (isValidImageURL(imageURL) && !imageURLs.contains(imageURL)) {
+			if (isValidImageElement(imageElement) &&
+				isValidImageURL(imageURL, protocol, userAgent) &&
+				!imageURLs.contains(imageURL)) {
+
 				imageURLs.add(imageURL);
 
 				if (imageURLs.size() >= _IMAGE_URLS_MAXIMUM) {
@@ -131,41 +157,52 @@ public class URLMetadataScraperProcessor {
 		return imageURLs;
 	}
 
-	protected String getTitle(Document document) {
-		Elements titleElements = document.select("meta[property=og:title]");
+	protected boolean isValidImageElement(Element imageElement)
+		throws Exception {
 
-		String title = titleElements.attr("content");
+		int height = GetterUtil.getInteger(imageElement.attr("height"));
 
-		if (Validator.isNull(title)) {
-			titleElements = document.select("meta[name=title]");
-
-			title = titleElements.attr("content");
+		if ((height > 0) && (height < _IMAGE_DIMENSION_MINIMUM)) {
+			return false;
 		}
 
-		if (Validator.isNull(title)) {
-			titleElements = document.select("title");
+		int width = GetterUtil.getInteger(imageElement.attr("width"));
 
-			title = titleElements.html();
+		if ((width > 0) && (width < _IMAGE_DIMENSION_MINIMUM)) {
+			return false;
 		}
 
-		if (Validator.isNull(title)) {
-			titleElements = document.select("meta[property=og:site_name]");
+		if ((height > 0) && (width > 0) &&
+			((height * width) < _IMAGE_AREA_MINIMUM)) {
 
-			title = titleElements.attr("content");
+			return false;
 		}
 
-		return StringUtil.shorten(title, 200);
+		return true;
 	}
 
-	protected boolean isValidImageURL(String imageURL) throws Exception {
+	protected boolean isValidImageURL(
+			String imageURL, String protocol, String userAgent)
+		throws Exception {
+
 		if (Validator.isNull(imageURL)) {
 			return false;
 		}
 
-		URL url = new URL(imageURL);
+		if (imageURL.startsWith("//")) {
+			imageURL = imageURL.replaceFirst("//", protocol);
+		}
 
 		try {
-			BufferedImage bufferedImage = ImageIO.read(url);
+			URL url = new URL(imageURL);
+
+			HttpURLConnection httpURLConnection =
+				(HttpURLConnection)url.openConnection();
+
+			httpURLConnection.setRequestProperty("User-Agent", userAgent);
+
+			BufferedImage bufferedImage = ImageIO.read(
+				httpURLConnection.getInputStream());
 
 			if (bufferedImage == null) {
 				return false;
@@ -187,10 +224,35 @@ public class URLMetadataScraperProcessor {
 		return false;
 	}
 
-	private static int _IMAGE_AREA_MINIMUM = 1000;
+	private static final int _DESCRIPTION_LENGTH_MAXIMUM = 300;
 
-	private static int _IMAGE_DIMENSION_MINIMUM = 80;
+	private static final int _IMAGE_AREA_MINIMUM = 1000;
 
-	private static int _IMAGE_URLS_MAXIMUM = 10;
+	private static final int _IMAGE_DIMENSION_MINIMUM = 80;
+
+	private static final int _IMAGE_URLS_MAXIMUM = 10;
+
+	private static final String[] _SELECTORS_DESCRIPTION = {
+		"meta[property=og:description]", "meta[name=og:description]",
+		"meta[name=description]"
+	};
+
+	private static final String[] _SELECTORS_IMAGE = {
+		"meta[property=og:image]", "meta[name=og:image]"
+	};
+
+	private static final String[] _SELECTORS_TITLE = {
+		"meta[property=og:title]", "meta[name=og:title]", "meta[name=title]",
+		"title", "meta[property=og:site_name]"
+	};
+
+	private static final String[] _SELECTORS_VIDEO_URL_ = {
+		"meta[property=og:video:]", "meta[property=og:video:url]",
+		"meta[property=og:video:secure_url]", "meta[name=twitter:player]"
+	};
+
+	private static final String _USER_AGENT_DEFAULT =
+		"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 " +
+			"Firefox/40.0";
 
 }

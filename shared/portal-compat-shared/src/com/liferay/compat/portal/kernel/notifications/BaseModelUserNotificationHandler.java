@@ -16,6 +16,7 @@ package com.liferay.compat.portal.kernel.notifications;
 
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -136,9 +137,13 @@ public abstract class BaseModelUserNotificationHandler
 			userName = user.getFullName();
 		}
 
-		return serviceContext.translate(
-			message, HtmlUtil.escape(userName),
-			StringUtil.toLowerCase(HtmlUtil.escape(typeName)));
+		return LanguageUtil.format(
+			serviceContext.getLocale(), message,
+			new String[] {
+				HtmlUtil.escape(assetRenderer.getUserName()),
+				StringUtil.toLowerCase(HtmlUtil.escape(typeName))
+			},
+			false);
 	}
 
 }

@@ -23,6 +23,8 @@ import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.BooleanQueryFactoryUtil;
@@ -189,12 +191,21 @@ public class MessageIndexer extends BaseIndexer {
 			new MessageActionableDynamicQuery() {
 
 			@Override
-			protected void performAction(Object object) throws PortalException {
+			protected void performAction(Object object) {
 				Message message = (Message)object;
 
-				Document document = getDocument(message);
+				try {
+					Document document = getDocument(message);
 
-				addDocument(document);
+					addDocument(document);
+				}
+				catch (PortalException pe) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to index message " + message.getMessageId(),
+							pe);
+					}
+				}
 			}
 
 		};
@@ -204,5 +215,7 @@ public class MessageIndexer extends BaseIndexer {
 
 		actionableDynamicQuery.performActions();
 	}
+
+	private static Log _log = LogFactoryUtil.getLog(MessageIndexer.class);
 
 }

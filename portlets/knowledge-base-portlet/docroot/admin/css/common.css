@@ -120,7 +120,7 @@
 			width: 100%;
 
 			.kb-article-comment-body {
-				word-break: normal;
+				word-wrap: break-word;
 			}
 
 			.kb-article-comment-user {
@@ -287,7 +287,7 @@
 			}
 
 			.kb-title {
-				display: inline;
+				display: block;
 				margin: 5px 0 0;
 
 				a {
@@ -298,6 +298,10 @@
 
 		.kb-article-assets, .kb-article-attachments {
 			margin: 10px 0 0;
+		}
+
+		.kb-artile-body {
+		    word-wrap: brea-word;
 		}
 
 		.kb-article-comments, .kb-template-comments {
@@ -393,10 +397,12 @@
 				color: #7D7D7D;
 			}
 
-			.kb-most-popular-column .kb-header {
-				border-bottom: 1px solid #CCC;
-				color: #555;
-				font-weight: bold;
+			.kb-most-popular-column, .kb-most-recent-column {
+				.kb-header {
+					border-bottom: 1px solid #CCC;
+					color: #555;
+					font-weight: bold;
+				}
 			}
 
 			.kb-title {
@@ -444,6 +450,7 @@
 
 		.kb-title {
 			font-weight: bold;
+			word-wrap: break-word;
 		}
 	}
 }

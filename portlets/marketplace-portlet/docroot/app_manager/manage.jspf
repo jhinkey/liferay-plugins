@@ -47,7 +47,7 @@ portletURL.setParameter("category", category);
 		List<App> apps = null;
 
 		if (Validator.isNotNull(category)) {
-			apps = AppLocalServiceUtil.getApps(category);
+			apps = AppLocalServiceUtil.getInstalledApps(category);
 		}
 		else {
 			apps = AppLocalServiceUtil.getInstalledApps();
@@ -148,7 +148,7 @@ portletURL.setParameter("category", category);
 					</div>
 
 					<div class="description">
-						<%= app.getDescription() %>
+						<%= HtmlUtil.escape(app.getDescription()) %>
 					</div>
 
 					<div class="plugins well">

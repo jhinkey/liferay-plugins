@@ -17,7 +17,9 @@ package com.liferay.calendar.util;
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
 import com.liferay.calendar.model.CalendarResource;
-import com.liferay.calendar.service.CalendarBookingLocalServiceUtil;
+import com.liferay.calendar.recurrence.Recurrence;
+import com.liferay.calendar.recurrence.RecurrenceSerializer;
+import com.liferay.calendar.service.CalendarBookingServiceUtil;
 import com.liferay.calendar.service.CalendarResourceLocalServiceUtil;
 import com.liferay.calendar.service.permission.CalendarPermission;
 import com.liferay.calendar.util.comparator.CalendarNameComparator;
@@ -64,10 +66,10 @@ public class CalendarUtil {
 	public static JSONObject getCalendarRenderingRules(
 			ThemeDisplay themeDisplay, long[] calendarIds, int[] statuses,
 			long startTime, long endTime, String ruleName, TimeZone timeZone)
-		throws SystemException {
+		throws PortalException, SystemException {
 
 		List<CalendarBooking> calendarBookings =
-			CalendarBookingLocalServiceUtil.search(
+			CalendarBookingServiceUtil.search(
 				themeDisplay.getCompanyId(), null, calendarIds, new long[0], -1,
 				null, startTime, endTime, true, statuses, QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS, null);
@@ -82,10 +84,16 @@ public class CalendarUtil {
 				displayTimeZone = _utcTimeZone;
 			}
 
+			long maxStartTime = Math.max(
+				calendarBooking.getStartTime(), startTime);
+
 			java.util.Calendar startTimeJCalendar = JCalendarUtil.getJCalendar(
-				calendarBooking.getStartTime(), displayTimeZone);
+				maxStartTime, displayTimeZone);
+
+			long minEndTime = Math.min(calendarBooking.getEndTime(), endTime);
+
 			java.util.Calendar endTimeJCalendar = JCalendarUtil.getJCalendar(
-				calendarBooking.getEndTime(), displayTimeZone);
+				minEndTime, displayTimeZone);
 
 			long days = JCalendarUtil.getDaysBetween(
 				startTimeJCalendar, endTimeJCalendar);
@@ -265,13 +273,25 @@ public class CalendarUtil {
 		jsonObject.put(
 			"parentCalendarBookingId",
 			calendarBooking.getParentCalendarBookingId());
-		jsonObject.put("recurrence", calendarBooking.getRecurrence());
-		jsonObject.put("secondReminder", calendarBooking.getSecondReminder());
-		jsonObject.put(
-			"secondReminderType", calendarBooking.getSecondReminder());
+
+		String recurrence = calendarBooking.getRecurrence();
 
 		java.util.Calendar startTimeJCalendar = JCalendarUtil.getJCalendar(
 			calendarBooking.getStartTime(), timeZone);
+
+		if (calendarBooking.isRecurring()) {
+			Recurrence recurrenceObj = RecurrenceUtil.inTimeZone(
+				calendarBooking.getRecurrenceObj(), startTimeJCalendar,
+				timeZone);
+
+			recurrence = RecurrenceSerializer.serialize(recurrenceObj);
+		}
+
+		jsonObject.put("recurrence", recurrence);
+
+		jsonObject.put("secondReminder", calendarBooking.getSecondReminder());
+		jsonObject.put(
+			"secondReminderType", calendarBooking.getSecondReminder());
 
 		_addTimeProperties(jsonObject, "startTime", startTimeJCalendar);
 

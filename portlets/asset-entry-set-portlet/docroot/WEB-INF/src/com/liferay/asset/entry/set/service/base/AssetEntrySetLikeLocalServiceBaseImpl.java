@@ -383,25 +383,6 @@ public abstract class AssetEntrySetLikeLocalServiceBaseImpl
 	}
 
 	/**
-	 * Returns the asset entry set like remote service.
-	 *
-	 * @return the asset entry set like remote service
-	 */
-	public com.liferay.asset.entry.set.service.AssetEntrySetLikeService getAssetEntrySetLikeService() {
-		return assetEntrySetLikeService;
-	}
-
-	/**
-	 * Sets the asset entry set like remote service.
-	 *
-	 * @param assetEntrySetLikeService the asset entry set like remote service
-	 */
-	public void setAssetEntrySetLikeService(
-		com.liferay.asset.entry.set.service.AssetEntrySetLikeService assetEntrySetLikeService) {
-		this.assetEntrySetLikeService = assetEntrySetLikeService;
-	}
-
-	/**
 	 * Returns the asset entry set like persistence.
 	 *
 	 * @return the asset entry set like persistence
@@ -682,8 +663,6 @@ public abstract class AssetEntrySetLikeLocalServiceBaseImpl
 	protected AssetEntrySetFinder assetEntrySetFinder;
 	@BeanReference(type = com.liferay.asset.entry.set.service.AssetEntrySetLikeLocalService.class)
 	protected com.liferay.asset.entry.set.service.AssetEntrySetLikeLocalService assetEntrySetLikeLocalService;
-	@BeanReference(type = com.liferay.asset.entry.set.service.AssetEntrySetLikeService.class)
-	protected com.liferay.asset.entry.set.service.AssetEntrySetLikeService assetEntrySetLikeService;
 	@BeanReference(type = AssetEntrySetLikePersistence.class)
 	protected AssetEntrySetLikePersistence assetEntrySetLikePersistence;
 	@BeanReference(type = AssetEntrySetLikeFinder.class)

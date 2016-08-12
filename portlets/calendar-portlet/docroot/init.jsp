@@ -26,6 +26,7 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.calendar.CalendarBookingDurationException" %><%@
+page import="com.liferay.calendar.CalendarBookingRecurrenceException" %><%@
 page import="com.liferay.calendar.CalendarNameException" %><%@
 page import="com.liferay.calendar.CalendarResourceCodeException" %><%@
 page import="com.liferay.calendar.CalendarResourceNameException" %><%@
@@ -127,7 +128,7 @@ String currentURL = PortalUtil.getCurrentURL(request);
 
 CalendarBooking calendarBooking = (CalendarBooking)request.getAttribute(WebKeys.CALENDAR_BOOKING);
 
-CalendarResource groupCalendarResource = CalendarResourceUtil.getGroupCalendarResource(liferayPortletRequest, scopeGroupId);
+CalendarResource groupCalendarResource = CalendarResourceUtil.getScopedGroupCalendarResource(liferayPortletRequest, scopeGroupId);
 CalendarResource userCalendarResource = CalendarResourceUtil.getUserCalendarResource(liferayPortletRequest, themeDisplay.getUserId());
 
 Calendar userDefaultCalendar = null;
@@ -142,7 +143,7 @@ if (userCalendarResource != null) {
 
 int defaultDuration = GetterUtil.getInteger(portletPreferences.getValue("defaultDuration", null), 60);
 String defaultView = portletPreferences.getValue("defaultView", "week");
-boolean isoTimeFormat = GetterUtil.getBoolean(portletPreferences.getValue("isoTimeFormat", null), !DateUtil.isFormatAmPm(locale));
+String timeFormat = GetterUtil.getString(portletPreferences.getValue("timeFormat", "locale"));
 String timeZoneId = portletPreferences.getValue("timeZoneId", user.getTimeZoneId());
 boolean usePortalTimeZone = GetterUtil.getBoolean(portletPreferences.getValue("usePortalTimeZone", Boolean.TRUE.toString()));
 int weekStartsOn = GetterUtil.getInteger(portletPreferences.getValue("weekStartsOn", null), 0);
@@ -167,7 +168,9 @@ Format dateFormatLongDate = FastDateFormatFactoryUtil.getDate(FastDateFormatCons
 
 Format dateFormatTime = null;
 
-if (isoTimeFormat) {
+boolean useIsoTimeFormat = timeFormat.equals("24-hour") || (timeFormat.equals("locale") && !DateUtil.isFormatAmPm(locale));
+
+if (useIsoTimeFormat) {
 	dateFormatTime = FastDateFormatFactoryUtil.getSimpleDateFormat("HH:mm", locale, userTimeZone);
 }
 else {

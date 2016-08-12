@@ -105,7 +105,7 @@ public class MentionsNotifier {
 				mentionedUser.getEmailAddress(), mentionedUser.getFullName());
 
 			sendWebsiteNotification(
-				mentionedUser.getUserId(), title, className, classPK,
+				userId, mentionedUser.getUserId(), title, className, classPK,
 				contentURL);
 		}
 
@@ -156,14 +156,12 @@ public class MentionsNotifier {
 	}
 
 	protected void sendWebsiteNotification(
-			long userId, String title, String className, long classPK,
-			String contentURL)
+			long userId, long mentionedUserId, String title, String className,
+			long classPK, String contentURL)
 		throws PortalException, SystemException {
 
-		User user = UserLocalServiceUtil.getUser(userId);
-
 		if (UserNotificationManagerUtil.isDeliver(
-				userId, PortletKeys.MENTIONS, 0,
+				mentionedUserId, PortletKeys.MENTIONS, 0,
 				MentionsConstants.NOTIFICATION_TYPE_MENTION,
 				UserNotificationDeliveryConstants.TYPE_WEBSITE)) {
 
@@ -184,7 +182,7 @@ public class MentionsNotifier {
 			notificationEvent.setDeliveryRequired(0);
 
 			UserNotificationEventLocalServiceUtil.addUserNotificationEvent(
-				user.getUserId(), notificationEvent);
+				mentionedUserId, notificationEvent);
 		}
 	}
 

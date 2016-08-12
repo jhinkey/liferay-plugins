@@ -16,7 +16,7 @@ package com.liferay.asset.entry.set.util;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 
 /**
@@ -24,13 +24,18 @@ import com.liferay.portal.kernel.util.ObjectValuePair;
  */
 public interface AssetEntrySetParticipantInfo {
 
+	public JSONArray getAssetTagsJSONArray(long userId, String[] assetTagNames)
+		throws PortalException, SystemException;
+
 	public ObjectValuePair<Long, Long> getClassNameIdAndClassPKOVP(long userId)
 		throws SystemException;
 
-	public JSONObject getParticipantJSONObject(
-			JSONObject participantJSONObject, long classNameId, long classPK,
-			boolean includeProfileImageURL)
+	public String[] getMembershipSearchTerms(long userId);
+
+	public String getParticipantName(long classNameId, long classPK)
 		throws PortalException, SystemException;
+
+	public String getSearchTerm(long classNameId, long classPK);
 
 	public boolean isMember(
 		long classNameId, long classPK, long sharedToClassNameId,

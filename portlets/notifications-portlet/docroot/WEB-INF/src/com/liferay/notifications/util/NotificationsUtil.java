@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.process.ProcessCallable;
 import com.liferay.portal.kernel.process.ProcessException;
 import com.liferay.portal.kernel.util.ObjectValuePair;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.model.Subscription;
 import com.liferay.portal.model.UserNotificationDeliveryConstants;
@@ -61,6 +62,25 @@ public class NotificationsUtil {
 					userId, actionRequired, archived, start, end);
 	}
 
+	public static List<UserNotificationEvent>
+		getArchivedUserNotificationEvents(
+			long userId, boolean archived, int start, int end)
+		throws PortalException, SystemException {
+
+		return
+			UserNotificationEventLocalServiceUtil.
+				getArchivedUserNotificationEvents(userId, archived, start, end);
+	}
+
+	public static int getArchivedUserNotificationEventsCount(
+			long userId, boolean archived)
+		throws PortalException, SystemException {
+
+		return
+			UserNotificationEventLocalServiceUtil.
+				getArchivedUserNotificationEventsCount(userId, archived);
+	}
+
 	public static int getArchivedUserNotificationEventsCount(
 			long userId, boolean actionRequired, boolean archived)
 		throws PortalException, SystemException {
@@ -83,6 +103,26 @@ public class NotificationsUtil {
 					userId, delivered, actionRequired, start, end);
 	}
 
+	public static List<UserNotificationEvent>
+		getDeliveredUserNotificationEvents(
+			long userId, boolean delivered, int start, int end)
+		throws PortalException, SystemException {
+
+		return
+			UserNotificationEventLocalServiceUtil.
+				getDeliveredUserNotificationEvents(
+					userId, delivered, start, end);
+	}
+
+	public static int getDeliveredUserNotificationEventsCount(
+			long userId, boolean delivered)
+		throws PortalException, SystemException {
+
+		return
+			UserNotificationEventLocalServiceUtil.
+				getDeliveredUserNotificationEventsCount(userId, delivered);
+	}
+
 	public static int getDeliveredUserNotificationEventsCount(
 			long userId, boolean delivered, boolean actionRequired)
 		throws PortalException, SystemException {
@@ -101,7 +141,9 @@ public class NotificationsUtil {
 			long controlPanelPlid = PortalUtil.getControlPanelPlid(
 				serviceContext.getCompanyId());
 
-			if (serviceContext.getPlid() == controlPanelPlid) {
+			if (Validator.isNotNull(portletKey) &&
+				(serviceContext.getPlid() == controlPanelPlid)) {
+
 				LiferayPortletRequest liferayPortletRequest =
 					serviceContext.getLiferayPortletRequest();
 

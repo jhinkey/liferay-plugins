@@ -32,7 +32,6 @@ page import="com.liferay.portal.kernel.notifications.UserNotificationDefinition"
 page import="com.liferay.portal.kernel.notifications.UserNotificationDeliveryType" %><%@
 page import="com.liferay.portal.kernel.notifications.UserNotificationManagerUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
-page import="com.liferay.portal.kernel.util.FastDateFormatFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringPool" %><%@
 page import="com.liferay.portal.model.Group" %><%@
@@ -42,11 +41,8 @@ page import="com.liferay.portal.model.UserNotificationDelivery" %><%@
 page import="com.liferay.portal.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.service.LayoutLocalServiceUtil" %><%@
 page import="com.liferay.portal.service.UserNotificationDeliveryLocalServiceUtil" %><%@
-page import="com.liferay.portal.service.UserNotificationEventLocalServiceUtil" %><%@
 page import="com.liferay.portal.util.PortalUtil" %><%@
 page import="com.liferay.portlet.PortletURLFactoryUtil" %>
-
-<%@ page import="java.text.Format" %>
 
 <%@ page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
@@ -61,6 +57,4 @@ page import="java.util.TreeMap" %>
 <%
 int dockbarViewDelta = 3;
 int fullViewDelta = 10;
-
-Format simpleDateFormat = FastDateFormatFactoryUtil.getSimpleDateFormat("EEEE, MMMMM dd, yyyy 'at' h:mm a", themeDisplay.getLocale(), themeDisplay.getTimeZone());
 %>

@@ -124,9 +124,15 @@ public class AssetEntrySetLikeLocalServiceClp
 
 		_methodParameterTypes17 = new String[] { "java.lang.String" };
 
-		_methodName19 = "getLikedParticipantFullNames";
+		_methodName19 = "fetchAssetEntrySetLike";
 
-		_methodParameterTypes19 = new String[] { "long", "long", "int", "int" };
+		_methodParameterTypes19 = new String[] { "long", "long", "long" };
+
+		_methodName20 = "getAssetEntrySetLikes";
+
+		_methodParameterTypes20 = new String[] {
+				"long", "long", "long", "int", "int"
+			};
 	}
 
 	@Override
@@ -695,23 +701,18 @@ public class AssetEntrySetLikeLocalServiceClp
 	}
 
 	@Override
-	public com.liferay.portal.kernel.json.JSONArray getLikedParticipantFullNames(
-		long userId, long assetEntrySetId, int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException,
-			com.liferay.portal.kernel.exception.SystemException {
+	public com.liferay.asset.entry.set.model.AssetEntrySetLike fetchAssetEntrySetLike(
+		long assetEntrySetId, long classNameId, long classPK)
+		throws com.liferay.portal.kernel.exception.SystemException {
 		Object returnObj = null;
 
 		try {
 			returnObj = _invokableLocalService.invokeMethod(_methodName19,
 					_methodParameterTypes19,
-					new Object[] { userId, assetEntrySetId, start, end });
+					new Object[] { assetEntrySetId, classNameId, classPK });
 		}
 		catch (Throwable t) {
 			t = ClpSerializer.translateThrowable(t);
-
-			if (t instanceof com.liferay.portal.kernel.exception.PortalException) {
-				throw (com.liferay.portal.kernel.exception.PortalException)t;
-			}
 
 			if (t instanceof com.liferay.portal.kernel.exception.SystemException) {
 				throw (com.liferay.portal.kernel.exception.SystemException)t;
@@ -726,7 +727,47 @@ public class AssetEntrySetLikeLocalServiceClp
 			}
 		}
 
-		return (com.liferay.portal.kernel.json.JSONArray)ClpSerializer.translateOutput(returnObj);
+		return (com.liferay.asset.entry.set.model.AssetEntrySetLike)ClpSerializer.translateOutput(returnObj);
+	}
+
+	@Override
+	public java.util.List<com.liferay.asset.entry.set.model.AssetEntrySetLike> getAssetEntrySetLikes(
+		long assetEntrySetId, long classNameId, long classPK, int start, int end)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		Object returnObj = null;
+
+		try {
+			returnObj = _invokableLocalService.invokeMethod(_methodName20,
+					_methodParameterTypes20,
+					new Object[] {
+						assetEntrySetId,
+						
+					classNameId,
+						
+					classPK,
+						
+					start,
+						
+					end
+					});
+		}
+		catch (Throwable t) {
+			t = ClpSerializer.translateThrowable(t);
+
+			if (t instanceof com.liferay.portal.kernel.exception.SystemException) {
+				throw (com.liferay.portal.kernel.exception.SystemException)t;
+			}
+
+			if (t instanceof RuntimeException) {
+				throw (RuntimeException)t;
+			}
+			else {
+				throw new RuntimeException(t.getClass().getName() +
+					" is not a valid exception");
+			}
+		}
+
+		return (java.util.List<com.liferay.asset.entry.set.model.AssetEntrySetLike>)ClpSerializer.translateOutput(returnObj);
 	}
 
 	private InvokableLocalService _invokableLocalService;
@@ -768,4 +809,6 @@ public class AssetEntrySetLikeLocalServiceClp
 	private String[] _methodParameterTypes17;
 	private String _methodName19;
 	private String[] _methodParameterTypes19;
+	private String _methodName20;
+	private String[] _methodParameterTypes20;
 }

@@ -16,14 +16,19 @@ package com.liferay.portal.search.solr.facet;
 
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.config.FacetConfiguration;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.Validator;
 
 import org.apache.solr.client.solrj.SolrQuery;
 
 /**
  * @author Michael C. Han
+ * @author André de Oliveira
+ * @author Tibor Lipusz
  */
 public class RangeFacetProcessor implements FacetProcessor<SolrQuery> {
 
@@ -33,16 +38,24 @@ public class RangeFacetProcessor implements FacetProcessor<SolrQuery> {
 
 		solrQuery.addFacetField(facetConfiguration.getFieldName());
 
-		JSONObject dataJSONObject = facetConfiguration.getData();
+		addConfigurationRanges(facetConfiguration, solrQuery);
 
-		JSONArray rangesJSONArray = dataJSONObject.getJSONArray("ranges");
+		addCustomRange(facet, solrQuery);
+	}
 
-		if (rangesJSONArray == null) {
+	protected void addConfigurationRanges(
+		FacetConfiguration facetConfiguration, SolrQuery solrQuery) {
+
+		JSONObject jsonObject = facetConfiguration.getData();
+
+		JSONArray jsonArray = jsonObject.getJSONArray("ranges");
+
+		if (jsonArray == null) {
 			return;
 		}
 
-		for (int i = 0; i < rangesJSONArray.length(); i++) {
-			JSONObject rangeJSONObject = rangesJSONArray.getJSONObject(i);
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject rangeJSONObject = jsonArray.getJSONObject(i);
 
 			String range = rangeJSONObject.getString("range");
 
@@ -51,6 +64,24 @@ public class RangeFacetProcessor implements FacetProcessor<SolrQuery> {
 
 			solrQuery.addFacetQuery(facetQuery);
 		}
+	}
+
+	protected void addCustomRange(Facet facet, SolrQuery solrQuery) {
+		SearchContext searchContext = facet.getSearchContext();
+
+		String range = GetterUtil.getString(
+			searchContext.getAttribute(facet.getFieldId()));
+
+		if (Validator.isNull(range)) {
+			return;
+		}
+
+		FacetConfiguration facetConfiguration = facet.getFacetConfiguration();
+
+		String facetQuery =
+			facetConfiguration.getFieldName() + StringPool.COLON + range;
+
+		solrQuery.addFacetQuery(facetQuery);
 	}
 
 }

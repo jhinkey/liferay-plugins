@@ -16,11 +16,14 @@ package com.liferay.knowledgebase.service.persistence;
 
 import com.liferay.knowledgebase.model.KBArticle;
 
+import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.Disjunction;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.lar.ExportImportHelperUtil;
@@ -30,6 +33,7 @@ import com.liferay.portal.kernel.lar.StagedModelDataHandler;
 import com.liferay.portal.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.portal.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.portal.kernel.lar.StagedModelType;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PortalUtil;
 
 /**
@@ -69,14 +73,32 @@ public class KBArticleExportActionableDynamicQuery
 
 	@Override
 	protected void addCriteria(DynamicQuery dynamicQuery) {
-		_portletDataContext.addDateRangeCriteria(dynamicQuery, "modifiedDate");
+		Criterion modifiedDateCriterion = _portletDataContext.getDateRangeCriteria(
+				"modifiedDate");
+		Criterion statusDateCriterion = _portletDataContext.getDateRangeCriteria(
+				"statusDate");
 
-		StagedModelDataHandler<?> stagedModelDataHandler = StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(KBArticle.class.getName());
+		if ((modifiedDateCriterion != null) && (statusDateCriterion != null)) {
+			Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+
+			disjunction.add(modifiedDateCriterion);
+			disjunction.add(statusDateCriterion);
+
+			dynamicQuery.add(disjunction);
+		}
 
 		Property workflowStatusProperty = PropertyFactoryUtil.forName("status");
 
-		dynamicQuery.add(workflowStatusProperty.in(
-				stagedModelDataHandler.getExportableStatuses()));
+		if (_portletDataContext.isInitialPublication()) {
+			dynamicQuery.add(workflowStatusProperty.ne(
+					WorkflowConstants.STATUS_IN_TRASH));
+		}
+		else {
+			StagedModelDataHandler<?> stagedModelDataHandler = StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(KBArticle.class.getName());
+
+			dynamicQuery.add(workflowStatusProperty.in(
+					stagedModelDataHandler.getExportableStatuses()));
+		}
 	}
 
 	@Override

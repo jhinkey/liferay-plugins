@@ -290,11 +290,16 @@ public interface AppLocalService extends BaseLocalService, InvokableLocalService
 		throws com.liferay.portal.kernel.exception.SystemException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public java.util.Map<java.lang.String, java.lang.String> getBundledApps();
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public java.util.List<com.liferay.marketplace.model.App> getInstalledApps()
 		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.marketplace.model.App> getInstalledApps(
+		java.lang.String category)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.Map<java.lang.String, java.lang.String> getPrepackagedApps();
 
 	public void installApp(long remoteAppId)
 		throws com.liferay.portal.kernel.exception.PortalException,
@@ -309,7 +314,7 @@ public interface AppLocalService extends BaseLocalService, InvokableLocalService
 			com.liferay.portal.kernel.exception.SystemException;
 
 	public com.liferay.marketplace.model.App updateApp(long userId,
-		long remoteAppId, java.lang.String version, java.io.File file)
+		java.io.File file)
 		throws com.liferay.portal.kernel.exception.PortalException,
 			com.liferay.portal.kernel.exception.SystemException;
 

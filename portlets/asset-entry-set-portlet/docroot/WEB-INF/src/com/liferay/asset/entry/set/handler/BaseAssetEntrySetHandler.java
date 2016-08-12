@@ -17,13 +17,27 @@ package com.liferay.asset.entry.set.handler;
 import com.liferay.asset.entry.set.model.AssetEntrySet;
 import com.liferay.asset.entry.set.service.AssetEntrySetLocalServiceUtil;
 import com.liferay.asset.entry.set.util.AssetEntrySetConstants;
+import com.liferay.asset.entry.set.util.AssetEntrySetParticipantInfoUtil;
+import com.liferay.asset.entry.set.util.PortletPropsValues;
+import com.liferay.compat.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.model.Country;
+import com.liferay.portal.service.CountryServiceUtil;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Calvin Keum
@@ -41,36 +55,193 @@ public class BaseAssetEntrySetHandler implements AssetEntrySetHandler {
 
 	@Override
 	public JSONObject interpret(
-			JSONObject payloadJSONObject, long assetEntrySetId)
+			long userId, long assetEntrySetId, JSONObject payloadJSONObject)
 		throws PortalException, SystemException {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
+		JSONObject geolocationJSONObject = JSONFactoryUtil.createJSONObject();
+
 		AssetEntrySet assetEntrySet =
 			AssetEntrySetLocalServiceUtil.fetchAssetEntrySet(assetEntrySetId);
 
-		if ((assetEntrySet != null) &&
-			isContentModified(
-				JSONFactoryUtil.createJSONObject(assetEntrySet.getPayload()),
-				payloadJSONObject)) {
+		if (assetEntrySet != null) {
+			if (isContentModified(
+					JSONFactoryUtil.createJSONObject(
+						assetEntrySet.getPayload()),
+					payloadJSONObject)) {
 
-			jsonObject.put("contentModifiedTime", System.currentTimeMillis());
+				jsonObject.put(
+					"contentModifiedTime", System.currentTimeMillis());
+			}
+
+			JSONObject oldPayloadJSONObject = JSONFactoryUtil.createJSONObject(
+				assetEntrySet.getPayload());
+
+			geolocationJSONObject = oldPayloadJSONObject.getJSONObject(
+				"geolocation");
+		}
+		else {
+			geolocationJSONObject = getGeolocationJSONObject(payloadJSONObject);
 		}
 
-		jsonObject.put("linkData", payloadJSONObject.getString("linkData"));
+		jsonObject.put("geolocation", geolocationJSONObject);
+
+		jsonObject.put("linkData", payloadJSONObject.getJSONObject("linkData"));
 		jsonObject.put("message", payloadJSONObject.getString("message"));
+		jsonObject.put("rawMessage", payloadJSONObject.getString("rawMessage"));
+		jsonObject.put(
+			"sendEmailNotifications",
+			payloadJSONObject.getBoolean("sendEmailNotifications"));
+		jsonObject.put("title", payloadJSONObject.getString("title"));
+		jsonObject.put("truncated", payloadJSONObject.getBoolean("truncated"));
+
+		String truncatedMessage = payloadJSONObject.getString(
+			"truncatedMessage");
+
+		if (Validator.isNotNull(truncatedMessage)) {
+			jsonObject.put("truncatedMessage", truncatedMessage);
+		}
+
 		jsonObject.put("type", payloadJSONObject.getString("type"));
 
-		jsonObject.put(
-			AssetEntrySetConstants.PAYLOAD_KEY_ASSET_TAG_NAMES,
+		JSONArray sharedToJSONArray = payloadJSONObject.getJSONArray(
+			AssetEntrySetConstants.PAYLOAD_KEY_SHARED_TO);
+
+		String[] assetTagNames = StringUtil.split(
 			payloadJSONObject.getString(
 				AssetEntrySetConstants.PAYLOAD_KEY_ASSET_TAG_NAMES));
+
+		JSONArray assetTagsJSONArray =
+			AssetEntrySetParticipantInfoUtil.getAssetTagsJSONArray(
+				userId, assetTagNames);
+
+		for (int i = 0; i < assetTagsJSONArray.length(); i++) {
+			sharedToJSONArray.put(assetTagsJSONArray.getJSONObject(i));
+		}
+
+		sharedToJSONArray = processSharedToJSONArray(sharedToJSONArray);
+
 		jsonObject.put(
-			AssetEntrySetConstants.PAYLOAD_KEY_SHARED_TO,
-			payloadJSONObject.getJSONArray(
-				AssetEntrySetConstants.PAYLOAD_KEY_SHARED_TO));
+			AssetEntrySetConstants.PAYLOAD_KEY_SHARED_TO, sharedToJSONArray);
 
 		return jsonObject;
+	}
+
+	protected JSONArray dedupeSharedToJSONArray(JSONArray sharedToJSONArray) {
+		Map<Long, List<Long>> classNameIds = new HashMap<Long, List<Long>>();
+
+		JSONArray newSharedToJSONArray = JSONFactoryUtil.createJSONArray();
+
+		for (int i = 0; i < sharedToJSONArray.length(); i++) {
+			JSONObject sharedToJSONObject = sharedToJSONArray.getJSONObject(i);
+
+			long classNameId = sharedToJSONObject.getLong("classNameId");
+
+			List<Long> classPKs = classNameIds.get(classNameId);
+
+			if (classPKs == null) {
+				classPKs = new ArrayList<Long>();
+			}
+
+			long classPK = sharedToJSONObject.getLong("classPK");
+
+			if (classPKs.contains(classPK)) {
+				continue;
+			}
+
+			classPKs.add(classPK);
+
+			classNameIds.put(classNameId, classPKs);
+
+			newSharedToJSONArray.put(sharedToJSONObject);
+		}
+
+		return newSharedToJSONArray;
+	}
+
+	protected JSONArray filterSharedToJSONArray(JSONArray sharedToJSONArray)
+		throws PortalException {
+
+		JSONArray newSharedToJSONArray = JSONFactoryUtil.createJSONArray();
+
+		List<String> keys = ListUtil.toList(
+			PortletPropsValues.ASSET_ENTRY_SET_SHARED_TO_JSON_OBJECT_KEYS);
+
+		for (int i = 0; i < sharedToJSONArray.length(); i++) {
+			JSONObject sharedToJSONObject = sharedToJSONArray.getJSONObject(i);
+
+			JSONObject newSharedToJSONObject = JSONFactoryUtil.createJSONObject(
+				sharedToJSONObject.toString());
+
+			Iterator<String> itr = sharedToJSONObject.keys();
+
+			while (itr.hasNext()) {
+				String key = itr.next();
+
+				if (!keys.contains(key)) {
+					newSharedToJSONObject.remove(key);
+				}
+			}
+
+			newSharedToJSONArray.put(newSharedToJSONObject);
+		}
+
+		return newSharedToJSONArray;
+	}
+
+	protected JSONObject getGeolocationJSONObject(
+		JSONObject payloadJSONObject) {
+
+		if (Validator.isNull(PortletPropsValues.GEONAMES_URL)) {
+			return JSONFactoryUtil.createJSONObject();
+		}
+
+		JSONObject geolocationJSONObject = payloadJSONObject.getJSONObject(
+			"geolocation");
+
+		if (geolocationJSONObject == null) {
+			return JSONFactoryUtil.createJSONObject();
+		}
+
+		double latitude = geolocationJSONObject.getDouble("latitude");
+		double longitude = geolocationJSONObject.getDouble("longitude");
+
+		geolocationJSONObject.put(
+			"locationName", getLocationName(latitude, longitude));
+
+		geolocationJSONObject.remove("latitude");
+		geolocationJSONObject.remove("longitude");
+
+		return geolocationJSONObject;
+	}
+
+	protected String getLocationName(double latitude, double longitude) {
+		try {
+			String url = HttpUtil.addParameter(
+				PortletPropsValues.GEONAMES_URL, "latitude", latitude);
+
+			url = HttpUtil.addParameter(url, "longitude", longitude);
+
+			JSONObject geoNamesJSONObject = JSONFactoryUtil.createJSONObject(
+				HttpUtil.URLtoString(url));
+
+			String name = geoNamesJSONObject.getString("name");
+
+			String countryCode = geoNamesJSONObject.getString("countryCode");
+
+			Country country = CountryServiceUtil.fetchCountryByA2(countryCode);
+
+			if (country == null) {
+				return name;
+			}
+
+			return name + StringPool.COMMA_AND_SPACE +
+				country.getName(LocaleUtil.getDefault());
+		}
+		catch (Exception e) {
+			return StringPool.BLANK;
+		}
 	}
 
 	protected boolean isContentModified(
@@ -97,6 +268,17 @@ public class BaseAssetEntrySetHandler implements AssetEntrySetHandler {
 		}
 
 		return false;
+	}
+
+	protected JSONArray processSharedToJSONArray(JSONArray sharedToJSONArray)
+		throws PortalException {
+
+		JSONArray newSharedToJSONArray = dedupeSharedToJSONArray(
+			sharedToJSONArray);
+
+		newSharedToJSONArray = filterSharedToJSONArray(newSharedToJSONArray);
+
+		return newSharedToJSONArray;
 	}
 
 	protected void setPortletId(String portletId) {

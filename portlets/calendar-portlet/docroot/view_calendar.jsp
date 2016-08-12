@@ -20,13 +20,15 @@
 String activeView = ParamUtil.getString(request, "activeView", sessionClicksDefaultView);
 long date = ParamUtil.getLong(request, "date", System.currentTimeMillis());
 
-List<Calendar> groupCalendars = null;
+List<Calendar> groupCalendars = Collections.emptyList();
 
-if (groupCalendarResource != null) {
+boolean showSiteCalendars = (groupCalendarResource != null) && (groupCalendarResource.getCalendarResourceId() != userCalendarResource.getCalendarResourceId());
+
+if (showSiteCalendars) {
 	groupCalendars = CalendarServiceUtil.search(themeDisplay.getCompanyId(), null, new long[] {groupCalendarResource.getCalendarResourceId()}, null, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS, (OrderByComparator)null);
 }
 
-List<Calendar> userCalendars = null;
+List<Calendar> userCalendars = Collections.emptyList();
 
 if (userCalendarResource != null) {
 	userCalendars = CalendarServiceUtil.search(themeDisplay.getCompanyId(), null, new long[] {userCalendarResource.getCalendarResourceId()}, null, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS, (OrderByComparator)null);
@@ -50,20 +52,17 @@ for (long calendarId : calendarIds) {
 
 Calendar defaultCalendar = null;
 
-List<Calendar> defaultCalendars = Collections.emptyList();
-
-if ((groupCalendars != null) && (groupCalendars.size() > 0)) {
-	defaultCalendars = groupCalendars;
-}
-else if (userCalendars != null) {
-	defaultCalendars = userCalendars;
+for (Calendar groupCalendar : groupCalendars) {
+	if (groupCalendar.isDefaultCalendar()) {
+		defaultCalendar = groupCalendar;
+	}
 }
 
-for (Calendar calendar : defaultCalendars) {
-	if (calendar.isDefaultCalendar()) {
-		defaultCalendar = calendar;
-
-		break;
+if (defaultCalendar == null) {
+	for (Calendar userCalendar : userCalendars) {
+		if (userCalendar.isDefaultCalendar()) {
+			defaultCalendar = userCalendar;
+		}
 	}
 }
 
@@ -94,11 +93,11 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 					<div class="calendar-portlet-calendar-list" id="<portlet:namespace />myCalendarList"></div>
 				</c:if>
 
-				<c:if test="<%= groupCalendarResource != null %>">
+				<c:if test="<%= showSiteCalendars %>">
 					<div class="calendar-portlet-list-header toggler-header-expanded">
 						<span class="calendar-portlet-list-arrow"></span>
 
-						<span class="calendar-portlet-list-text"><liferay-ui:message key="current-site-calendars" /></span>
+						<span class="calendar-portlet-list-text"><liferay-ui:message arguments="<%= new String[] {groupCalendarResource.getName(locale)} %>" key="x-calendars" /></span>
 
 						<c:if test="<%= CalendarResourcePermission.contains(permissionChecker, groupCalendarResource, ActionKeys.ADD_CALENDAR) %>">
 							<span class="calendar-list-item-arrow" data-calendarResourceId="<%= groupCalendarResource.getCalendarResourceId() %>" tabindex="0"><i class="icon-caret-down"></i></span>
@@ -203,12 +202,12 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 			calendarLists.push(window.<portlet:namespace />otherCalendarList);
 		</c:if>
 
-		<c:if test="<%= groupCalendarResource != null %>">
+		<c:if test="<%= showSiteCalendars %>">
 			calendarLists.push(window.<portlet:namespace />siteCalendarList);
 		</c:if>
 
 		Liferay.CalendarUtil.syncCalendarsMap(calendarLists);
-	}
+	};
 
 	window.<portlet:namespace />syncCalendarsMap = syncCalendarsMap;
 
@@ -387,13 +386,19 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 
 		<portlet:namespace />miniCalendar.selectDates(selectedDates);
 
+		var todayDate = <portlet:namespace />scheduler.get('todayDate');
+
+		if ((selectedDates.length > 0) && DateMath.between(todayDate, selectedDates[0], selectedDates[total - 1])) {
+			viewDate = todayDate;
+		}
+
 		<portlet:namespace />miniCalendar.set('date', viewDate);
 	};
 
 	window.<portlet:namespace />refreshVisibleCalendarRenderingRules = function() {
 		var miniCalendarStartDate = DateMath.subtract(DateMath.toMidnight(window.<portlet:namespace />miniCalendar.get('date')), DateMath.WEEK, 1);
 
-		var miniCalendarEndDate = DateMath.add(DateMath.add(miniCalendarStartDate, DateMath.MONTH, 1), DateMath.WEEK, 1);
+		var miniCalendarEndDate = DateMath.add(DateMath.add(window.<portlet:namespace />miniCalendar.get('date'), DateMath.MONTH, 1), DateMath.WEEK, 1);
 
 		miniCalendarEndDate.setHours(23, 59, 59, 999);
 
@@ -403,13 +408,13 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 			Liferay.CalendarUtil.toUTC(miniCalendarEndDate),
 			'busy',
 			function(rulesDefinition) {
+				var selectedDates = <portlet:namespace />miniCalendar._getSelectedDatesList();
+
 				window.<portlet:namespace />miniCalendar.set(
 					'customRenderer',
 					{
 						filterFunction: function(date, node, rules) {
 							node.addClass('lfr-busy-day');
-
-							var selectedDates = this._getSelectedDatesList();
 
 							DateMath.toMidnight(date);
 
@@ -424,6 +429,8 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 						rules: rulesDefinition
 					}
 				);
+
+				<portlet:namespace />miniCalendar.selectDates(selectedDates);
 			}
 		);
 	};

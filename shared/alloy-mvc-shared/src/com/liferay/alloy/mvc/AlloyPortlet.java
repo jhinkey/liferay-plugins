@@ -37,6 +37,7 @@ import java.io.IOException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -122,21 +123,6 @@ public class AlloyPortlet extends GenericPortlet {
 	public void processAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws IOException, PortletException {
-
-		String actionName = ParamUtil.getString(
-			actionRequest, ActionRequest.ACTION_NAME);
-
-		if (actionName.equals("alloyDataRequest")) {
-			try {
-				AlloyDataRequestProcessor.process(
-					actionRequest, actionResponse, _alloyControllers);
-			}
-			catch (Exception e) {
-				throw new IOException(e);
-			}
-
-			return;
-		}
 
 		String path = getPath(actionRequest);
 
@@ -227,23 +213,35 @@ public class AlloyPortlet extends GenericPortlet {
 		}
 	}
 
-	protected synchronized void registerAlloyController(
-		AlloyController alloyController) {
-
-		BaseAlloyControllerImpl baseAlloyControllerImpl =
+	protected void registerAlloyController(AlloyController alloyController) {
+		BaseAlloyControllerImpl newBaseAlloyControllerImpl =
 			(BaseAlloyControllerImpl)alloyController;
 
-		String controllerPath = baseAlloyControllerImpl.controllerPath;
+		String controller = newBaseAlloyControllerImpl.controllerPath;
 
-		if (!baseAlloyControllerImpl.equals(
-				_alloyControllers.get(controllerPath))) {
+		BaseAlloyControllerImpl oldBaseAlloyControllerImpl =
+			_alloyControllers.get(controller);
 
-			_alloyControllers.put(controllerPath, baseAlloyControllerImpl);
+		if ((oldBaseAlloyControllerImpl == null) ||
+			(newBaseAlloyControllerImpl.getClass() !=
+				oldBaseAlloyControllerImpl.getClass())) {
 
-			_alloyControllerInvokerManager.registerController(
-				baseAlloyControllerImpl.getThemeDisplay(), this,
-				baseAlloyControllerImpl.portlet, controllerPath,
-				baseAlloyControllerImpl.getClass());
+			synchronized (controller.intern()) {
+				oldBaseAlloyControllerImpl = _alloyControllers.get(controller);
+
+				if ((oldBaseAlloyControllerImpl == null) ||
+					(newBaseAlloyControllerImpl.getClass() !=
+						oldBaseAlloyControllerImpl.getClass())) {
+
+					_alloyControllers.put(
+						controller, newBaseAlloyControllerImpl);
+
+					_alloyControllerInvokerManager.registerController(
+						newBaseAlloyControllerImpl.getThemeDisplay(), this,
+						newBaseAlloyControllerImpl.portlet, controller,
+						newBaseAlloyControllerImpl.getClass());
+				}
+			}
 		}
 	}
 
@@ -251,7 +249,7 @@ public class AlloyPortlet extends GenericPortlet {
 
 	private AlloyControllerInvokerManager _alloyControllerInvokerManager;
 	private Map<String, BaseAlloyControllerImpl> _alloyControllers =
-		new HashMap<String, BaseAlloyControllerImpl>();
+		new ConcurrentHashMap<String, BaseAlloyControllerImpl>();
 	private Map<String, String> _defaultRouteParameters =
 		new HashMap<String, String>();
 
